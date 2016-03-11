@@ -27,7 +27,7 @@
 #define SUB_DIVX        16
 
 /* Maximal length of line of a subtitle */
-#define LINE_LEN                    1000
+#define LINE_LEN                    1024*5
 
 typedef enum
 {

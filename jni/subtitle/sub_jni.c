@@ -71,23 +71,27 @@ JNIEXPORT jobject JNICALL parseSubtitleFile
     list_t *entry;
     jstring jtext;
     char *textBuf = NULL;
+    int len = 0;
     list_for_each(entry, &subdata->list)
     {
         i++;
         subtitle_t *subt = list_entry(entry, subtitle_t, list);
         LOGE("[parseSubtitleFile](%d,%d)", subt->start, subt->end);
-        textBuf = (char *)malloc(subt->text.lines * 512);
-        if (textBuf == NULL)
-        {
+
+        for (j = 0; j < subt->text.lines; j++) {
+            len = len + strlen(subt->text.text[j]) + 1; //+1 indicate "\n" for each line
+        }
+        textBuf = (char *)malloc(len);
+        if (textBuf == NULL) {
             LOGE("malloc text buffer failed!");
             goto err;
         }
-        memset(textBuf, 0, subt->text.lines * 512);
-        for (j = 0; j < subt->text.lines; j++)
-        {
+        memset(textBuf, 0, len);
+        for (j = 0; j < subt->text.lines; j++) {
             strcat(textBuf, subt->text.text[j]);
             strcat(textBuf, "\n");
         }
+
         jbyteArray array = (*env)->NewByteArray(env, strlen(textBuf));
         (*env)->SetByteArrayRegion(env, array, 0, strlen(textBuf),
                                    textBuf);

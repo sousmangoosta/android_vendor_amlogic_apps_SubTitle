@@ -393,7 +393,7 @@ static char *internal_subf_gets(char *s, int fd)
         }
     }
     //add to avoid overflow
-    if (strlen(s) >= 512)
+    if (strlen(s) >= LINE_LEN)
         s = NULL;
     return s;
 }
