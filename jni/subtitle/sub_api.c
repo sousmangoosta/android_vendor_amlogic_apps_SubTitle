@@ -2188,6 +2188,10 @@ static int internal_sub_autodetect(int fd)
     return SUB_INVALID; // too many bad lines
 }
 
+SUBAPI void reset_variate() {
+    mpsub_position = 0;
+}
+
 SUBAPI void internal_sub_close(subdata_t *subdata)
 {
     int i;
@@ -2244,6 +2248,7 @@ SUBAPI subdata_t *internal_sub_open(char *filename, unsigned int rate,
         {internal_sub_read_line_mpl2, NULL, "mpl2"}
     };
     subreader_t *srp;
+    reset_variate();
     //log_print("[internal_sub_open] filename= %s, charset=%s\n", filename, charset);
     if (filename == NULL)
     {

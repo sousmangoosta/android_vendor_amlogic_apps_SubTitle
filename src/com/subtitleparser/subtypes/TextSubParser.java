@@ -133,7 +133,8 @@ public class TextSubParser implements SubtitleParser {
 
         public SubtitleApi parse (String filename, String encode) throws MalformedSubException {
 
-            SubtitleFile file = Subtitle.parseSubtitleFileByJni (filename, encode);
+            SubtitleFile file = new SubtitleFile();
+            file = Subtitle.parseSubtitleFileByJni (filename, encode);
             if (file == null) {
                 Log.e("TextSubParser", "------------err-----------");
                 //throw new MalformedSubException ("text sub parser return NULL!");
