@@ -197,9 +197,13 @@ public class SubtitleFile extends LinkedList {
                 }
                 else {
                     while (curIndex > 0) {
-                        n = (SubtitleLine) get (curIndex - preOffset);
+                        int tmpIdx = curIndex - preOffset;
+                        if (tmpIdx <= 0) {
+                            tmpIdx = 0;
+                        }
+                        n = (SubtitleLine) get (tmpIdx);
                         if (millisec >= n.getBegin().getMilValue()) {
-                            ret = curIndex - preOffset;
+                            ret = tmpIdx;
                             break;
                         }
                         else {
