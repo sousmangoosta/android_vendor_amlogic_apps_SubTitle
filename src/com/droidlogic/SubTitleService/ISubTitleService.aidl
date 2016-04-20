@@ -21,6 +21,7 @@ interface ISubTitleService
     void setTextStyle(int style);
     void setPosHeight(int height);
     void setImgSubRatio(float ratioW, float ratioH, int maxW, int maxH);
+    void setSurfaceViewParam(int x, int y, int w, int h);
     void clear();
     void resetForSeek();
     void hide();

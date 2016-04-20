@@ -80,6 +80,9 @@ public class SubTitleService extends ISubTitleService.Stub {
     private ListView mListView;
     private int mCurOptSelect = 0;
 
+    //for window scale
+    private int mOriginTextSize = 20;
+
     public SubTitleService(Context context) {
         LOGI("[SubTitleService]");
         mContext = context;
@@ -90,13 +93,38 @@ public class SubTitleService extends ISubTitleService.Stub {
         if (mDebug) Log.i(TAG, msg);
     }
 
+    public void setSurfaceViewParam(int x, int y, int w, int h) {
+        int originW = mDisplay.getWidth();
+        int originH = mDisplay.getHeight();
+        if (originW == 0 || originH == 0 || w == 0 || h  == 0) {
+            Log.e(TAG, "[setSurfaceViewParam]originW:" + originW + ", originH:" + originH + ", w:" + w + ", h:" + h);
+            return;
+        }
+        float ratioW = (float)(w / originW);
+        float ratioH = (float)(h / originH);
+
+        removeView();//view will add in message show content handler
+
+        // update image subtitle size
+        mWindowLayoutParams.x = x;
+        mWindowLayoutParams.y = y;
+        mWindowLayoutParams.width = w;
+        mWindowLayoutParams.height = h;
+        LOGI("[setSurfaceViewParam]x:" + mWindowLayoutParams.x + ",y:" + mWindowLayoutParams.y + ",width:" + mWindowLayoutParams.width + ",height:" + mWindowLayoutParams.height);
+        setImgSubRatio(ratioW, ratioH, w, h);
+
+        // update text subtitle size
+        setTextSize((int)(mOriginTextSize * ratioW));// take ratioW as ratio for text size
+        LOGI("[setSurfaceViewParam]ratioW:" + ratioW + ",ratioH:" + ratioH);
+    }
+
     private void init() {
         //init view
         mSubView = LayoutInflater.from(mContext).inflate(R.layout.subtitleview, null);
         subTitleView = (SubtitleView) mSubView.findViewById(R.id.subtitle);
         subTitleView.clear();
         subTitleView.setTextColor(Color.WHITE);
-        subTitleView.setTextSize(20);
+        subTitleView.setTextSize(mOriginTextSize);
         subTitleView.setTextStyle(Typeface.NORMAL);
         subTitleView.setViewStatus(true);
 
@@ -148,7 +176,6 @@ public class SubTitleService extends ISubTitleService.Stub {
         mSubtitleUtils = new SubtitleUtils(path);
         mSubTotal = mSubtitleUtils.getSubTotal();
         mCurSubId = mSubtitleUtils.getCurrentInSubtitleIndexByJni(); //get inner subtitle current index as default, 0 is always, if there is no inner subtitle, 0 indicate the first external subtitle
-        LOGI("[open] mCurSubId: " + mCurSubId);
         sendOpenMsg(mCurSubId);
 
         //load("http://milleni.ercdn.net/9_test/double_lang_test.xml"); for test
@@ -408,7 +435,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     private void sendResetForSeekMsg() {
-        Message msg = mHandler.obtainMessage (RESET_FOR_SEEK);
+        Message msg = mHandler.obtainMessage(RESET_FOR_SEEK);
         mHandler.sendMessage(msg);
     }
 
