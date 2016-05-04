@@ -86,6 +86,10 @@ public class SubtitleView extends FrameLayout {
             hmax = maxH;
         }
 
+        public void setImgSubRatio(float ratio) {
+            wscale = hscale = ratio;
+        }
+
         public void setTextColor (int color) {
             if (mTextView != null) {
                 mTextView.setTextColor (color);
@@ -122,8 +126,6 @@ public class SubtitleView extends FrameLayout {
         public void clear() {
             data = null;
             SubManager.getinstance().clear();
-            wscale = 1.000f;
-            hscale = 1.000f;
             this.removeAllViews();
             this.requestLayout();
         }
@@ -222,7 +224,7 @@ public class SubtitleView extends FrameLayout {
             if (data != null) {
                 if (data.subSize() > 0) {
                     if (data.gettype() == 1) {
-                        evaluteScale (data.getSubBitmap() );
+                        //evaluteScale (data.getSubBitmap() );
                         Bitmap inter_bitmap = creatBitmapByScale (data.getSubBitmap(), wscale, hscale, wmax, hmax);
                         if ( (inter_bitmap != null) && (mImageView != null) ) {
                             mImageView.setImageBitmap (inter_bitmap);
@@ -253,7 +255,7 @@ public class SubtitleView extends FrameLayout {
             stopOsdTimeout();
             if (data != null) {
                 if (data.gettype() == 1) {
-                    evaluteScale (data.getSubBitmap() );
+                    //evaluteScale (data.getSubBitmap() );
                     Bitmap inter_bitmap = creatBitmapByScale (data.getSubBitmap(), wscale, hscale, wmax, hmax);
                     if ( (inter_bitmap != null) && (mImageView != null) ) {
                         mImageView.setImageBitmap (inter_bitmap);
@@ -533,6 +535,8 @@ public class SubtitleView extends FrameLayout {
             dataPgsAShowed = false;
             dataPgsBShowed = false;
             resetForSeek = false;
+            wscale = 1.000f;
+            hscale = 1.000f;
             SubManager.getinstance().closeSubtitle();
         }
 
@@ -563,5 +567,19 @@ public class SubtitleView extends FrameLayout {
 
         public SubtitleApi getSubtitleFile() {
             return SubManager.getinstance().getSubtitleFile();
+        }
+
+        public int getOriginW() {
+            if (data != null) {
+                return data.getOriginW();
+            }
+            return 0;
+        }
+
+        public int getOriginH() {
+            if (data != null) {
+                return data.getOriginH();
+            }
+            return 0;
         }
 }

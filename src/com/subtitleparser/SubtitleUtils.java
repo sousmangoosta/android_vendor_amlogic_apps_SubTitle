@@ -59,7 +59,7 @@ public class SubtitleUtils {
                 filename = name;
                 //          FileChangedByJni(name);
                 subfile = new File (filename);
-                if (SystemProperties.getBoolean ("sys.extSubtitle.enable", true) ) {
+                if (SystemProperties.getBoolean ("sys.extSubtitle.enable", true) && !name.startsWith ("/data/")) {
                     accountExSubtitleNumber();
                 }
             }
@@ -169,9 +169,9 @@ public class SubtitleUtils {
         }
 
         public SubID getSubID (int index) {
-            if (subfile == null) {
-                return null ;
-            }
+            //if (subfile == null) {
+                //return null ;
+            //}
             if (index < getInSubTotal() ) {
                 return new SubID ("INSUB", index);
             } else if (index < getSubTotal() ) {
@@ -192,7 +192,7 @@ public class SubtitleUtils {
         private void  accountExSubtitleNumber() {
             String tmp = subfile.getName();
             String prefix = tmp.substring (0, tmp.lastIndexOf ('.') /*+1*/);
-            Log.i ("SubtitleUtils",  "" + prefix);
+            Log.i ("SubtitleUtils","[accountExSubtitleNumber]prefix:" + prefix);
             File DirFile = subfile.getParentFile();
             int idxindex = 0;
             boolean skipLrc = false;

@@ -1,6 +1,8 @@
 package com.droidlogic.SubTitleService;
 
 import android.util.Log;
+import android.util.DisplayMetrics;
+
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -39,9 +41,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.droidlogic.app.SystemControlManager;
+
 public class SubTitleService extends ISubTitleService.Stub {
     private static final String TAG = "SubTitleService";
     private static final String SUBTITLE_WIN_TITLE = "com.droidlogic.subtitle.win";
+    private static final String DISPLAY_MODE_SYSFS = "/sys/class/display/mode";
+    private SystemControlManager mSystemControl;
 
     private static final int OPEN = 0xF0; //random value
     private static final int SHOW_CONTENT = 0xF1;
@@ -74,14 +80,20 @@ public class SubTitleService extends ISubTitleService.Stub {
     private SubtitleView subTitleView = null;
     private int mSubTotal = -1;
     private int mCurSubId = 0;
+    private int mSetSubId = -1;
 
     //for subtitle option
     private AlertDialog mOptionDialog;
     private ListView mListView;
     private int mCurOptSelect = 0;
 
+    //for subtitle img ratio
+    private boolean mRatioSet = false;
+
     //for window scale
-    private int mOriginTextSize = 20;
+    private float mRatio = 1.000f;
+    private int mTextSize = 20;
+    private int mBottomMargin = 50; //should sync with SubtitleView.xml
 
     public SubTitleService(Context context) {
         LOGI("[SubTitleService]");
@@ -93,38 +105,16 @@ public class SubTitleService extends ISubTitleService.Stub {
         if (mDebug) Log.i(TAG, msg);
     }
 
-    public void setSurfaceViewParam(int x, int y, int w, int h) {
-        int originW = mDisplay.getWidth();
-        int originH = mDisplay.getHeight();
-        if (originW == 0 || originH == 0 || w == 0 || h  == 0) {
-            Log.e(TAG, "[setSurfaceViewParam]originW:" + originW + ", originH:" + originH + ", w:" + w + ", h:" + h);
-            return;
-        }
-        float ratioW = (float)(w / originW);
-        float ratioH = (float)(h / originH);
-
-        removeView();//view will add in message show content handler
-
-        // update image subtitle size
-        mWindowLayoutParams.x = x;
-        mWindowLayoutParams.y = y;
-        mWindowLayoutParams.width = w;
-        mWindowLayoutParams.height = h;
-        LOGI("[setSurfaceViewParam]x:" + mWindowLayoutParams.x + ",y:" + mWindowLayoutParams.y + ",width:" + mWindowLayoutParams.width + ",height:" + mWindowLayoutParams.height);
-        setImgSubRatio(ratioW, ratioH, w, h);
-
-        // update text subtitle size
-        setTextSize((int)(mOriginTextSize * ratioW));// take ratioW as ratio for text size
-        LOGI("[setSurfaceViewParam]ratioW:" + ratioW + ",ratioH:" + ratioH);
-    }
-
     private void init() {
+        //get system control
+        mSystemControl = new SystemControlManager(mContext);
+
         //init view
         mSubView = LayoutInflater.from(mContext).inflate(R.layout.subtitleview, null);
         subTitleView = (SubtitleView) mSubView.findViewById(R.id.subtitle);
         subTitleView.clear();
         subTitleView.setTextColor(Color.WHITE);
-        subTitleView.setTextSize(mOriginTextSize);
+        subTitleView.setTextSize(20);
         subTitleView.setTextStyle(Typeface.NORMAL);
         subTitleView.setViewStatus(true);
 
@@ -167,15 +157,25 @@ public class SubTitleService extends ISubTitleService.Stub {
             mOptionDialog.dismiss();
         }
 
-        File file = new File(path);
-        String name = file.getName();
-        if (name == null || (name != null && -1 == name.lastIndexOf('.'))) {
-            return;
+        if (path != null && !path.equals("")) {
+            File file = new File(path);
+            String name = file.getName();
+            if (name == null || (name != null && -1 == name.lastIndexOf('.'))) {
+                return;
+            }
+            mSubtitleUtils = new SubtitleUtils(path);
+        }
+        else {
+            mSubtitleUtils = new SubtitleUtils();
         }
 
-        mSubtitleUtils = new SubtitleUtils(path);
         mSubTotal = mSubtitleUtils.getSubTotal();
         mCurSubId = mSubtitleUtils.getCurrentInSubtitleIndexByJni(); //get inner subtitle current index as default, 0 is always, if there is no inner subtitle, 0 indicate the first external subtitle
+        if (mSetSubId >= 0) {
+            mCurSubId = mSetSubId;
+            mSetSubId = -1;
+        }
+        LOGI("[open] mCurSubId: " + mCurSubId);
         sendOpenMsg(mCurSubId);
 
         //load("http://milleni.ercdn.net/9_test/double_lang_test.xml"); for test
@@ -189,12 +189,21 @@ public class SubTitleService extends ISubTitleService.Stub {
             mSubtitleUtils = null;
         }
         mSubTotal = -1;
+        mSetSubId = -1;
         sendCloseMsg();
     }
 
     public int getSubTotal() {
         LOGI("[getSubTotal] mSubTotal:" + mSubTotal);
         return mSubTotal;
+    }
+
+    public int getInnerSubTotal() {
+        return mSubtitleUtils.getInSubTotal();
+    }
+
+    public int getExternalSubTotal() {
+        return mSubtitleUtils.getExSubTotal();
     }
 
     public void nextSub() { // haven't test
@@ -221,9 +230,11 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     public void openIdx(int idx) {
         LOGI("[openIdx]idx:" + idx);
-        if (idx > 0 && idx < mSubTotal) {
+        if (idx >= 0 && idx < mSubTotal) {
             mCurSubId = idx;
             sendOpenMsg(idx);
+        } else {
+            mSetSubId = idx;
         }
     }
 
@@ -251,6 +262,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     public void setTextSize (int size) {
+        mTextSize = size;
         sendSetTxtSizeMsg(size);
     }
 
@@ -288,7 +300,7 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     public void setImgSubRatio (float ratioW, float ratioH, int maxW, int maxH) {
         LOGI("[setImgSubRatio] ratioW:" + ratioW + ", ratioH:" + ratioH + ",maxW:" + maxW + ",maxH:" + maxH);
-        subTitleView.setImgSubRatio(ratioW, ratioH, maxW, maxH);
+        //subTitleView.setImgSubRatio(ratioW, ratioH, maxW, maxH);
     }
 
     public String getCurName() {
@@ -303,7 +315,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     public String getSubName(int idx) {
         String name = null;
 
-        if (idx > 0 && idx < mSubTotal && mSubtitleUtils != null) {
+        if (idx >= 0 && idx < mSubTotal && mSubtitleUtils != null) {
             name = mSubtitleUtils.getSubPath(idx);
             if (name != null) {
                 int index = name.lastIndexOf("/");
@@ -326,7 +338,7 @@ public class SubTitleService extends ISubTitleService.Stub {
         String language = null;
         int index = 0;
 
-        if (idx > 0 && idx < mSubTotal && mSubtitleUtils != null) {
+        if (idx >= 0 && idx < mSubTotal && mSubtitleUtils != null) {
             language = mSubtitleUtils.getSubPath(idx);
             if (language != null) {
                 index = language.lastIndexOf(".");
@@ -537,6 +549,99 @@ public class SubTitleService extends ISubTitleService.Stub {
         return ret;
     }
 
+    public void setSurfaceViewParam(int x, int y, int w, int h) {
+        String mode = mSystemControl.readSysFs(DISPLAY_MODE_SYSFS).replaceAll("\n","");
+        int[] curPosition = mSystemControl.getPosition(mode);
+        int modeW = curPosition[2];
+        int modeH = curPosition[3];
+        int fbW = mDisplay.getWidth();
+        int fbH = mDisplay.getHeight();
+
+        if (modeW == 0 || modeH == 0 || w == 0 || h  == 0) {
+            return;
+        }
+
+        removeView();//view will add in message show content handler
+
+        float ratioViewW = ((float)w) / modeW;
+        float ratioViewH = ((float)h) / modeH;
+        float ratioFBW = ((float)fbW) /modeW;
+        float ratioFBH = ((float)fbH) /modeH;
+
+        // update image subtitle size
+        if (ratioViewW >= ratioViewH) {
+            mRatio = ratioViewW;
+        }
+        else {
+            mRatio = ratioViewH;
+        }
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) subTitleView.getLayoutParams();
+        layoutParams.bottomMargin=(int)(mBottomMargin * ratioFBH);
+        subTitleView.setLayoutParams(layoutParams);
+        mWindowLayoutParams.x = (int)(x * ratioFBW);
+        mWindowLayoutParams.y = (int)(y * ratioFBH);
+        mWindowLayoutParams.width = (int)(w * ratioFBW);
+        mWindowLayoutParams.height = (int)(h * ratioFBH);
+        LOGI("[setSurfaceViewParam]x:" + mWindowLayoutParams.x + ",y:" + mWindowLayoutParams.y + ",width:" + mWindowLayoutParams.width + ",height:" + mWindowLayoutParams.height);
+        subTitleView.setImgSubRatio(mRatio);
+
+        // update text subtitle size
+        setTextSize((int)(mTextSize * mRatio));
+        LOGI("[setSurfaceViewParam]mRatio:" + mRatio + ", mTextSize:" + mTextSize);
+    }
+
+    private void adjustImgRatioDft() {
+        float ratio = 1.000f;
+        float ratioMax = 2.000f;
+        float ratioMin = 0.800f;
+
+        if (mRatioSet) {
+            return;
+        }
+
+        int originW = subTitleView.getOriginW();
+        int originH = subTitleView.getOriginH();
+        LOGI("[adjustImgRatioDft] originW: " + originW + ", originH:" + originH);
+        if (originW <= 0 || originH <= 0) {
+            return;
+        }
+
+        //String mode = mSystemWriteManager.readSysfs(DISPLAY_MODE_SYSFS).replaceAll("\n","");
+        //int[] curPosition = mMboxOutputModeManager.getPosition(mode);
+        //int modeW = curPosition[2];
+        //int modeH = curPosition[3];
+        //LOGI("[adjustImgRatioDft] modeW: " + modeW + ", modeH:" + modeH);
+        DisplayMetrics dm = new DisplayMetrics();
+        dm = mContext.getResources().getDisplayMetrics();
+        int frameW = dm.widthPixels;
+        int frameH = dm.heightPixels;
+        LOGI("[adjustImgRatioDft] frameW: " + frameW + ", frameH:" + frameH);
+
+        if (frameW > 0 && frameH > 0) {
+            float ratioW = ((float)frameW / (float)originW);
+            float ratioH = ((float)frameH / (float)originH);
+            LOGI("[adjustImgRatioDft] ratioW: " + ratioW + ", ratioH:" + ratioH);
+            if (ratioW > ratioH) {
+                ratio = ratioH;
+            }
+            else if (ratioW <= ratioH) {
+                ratio = ratioW;
+            }
+
+            if (ratio >= ratioMax) {
+                ratio = ratioMax;
+            }
+            else if (ratio <= ratioMin) {
+                ratio = ratioMin;
+            }
+        }
+        LOGI("[adjustImgRatioDft] ratio: " + ratio);
+        if (ratio > 0) {
+            subTitleView.setImgSubRatio(ratio * mRatio);
+        }
+        mRatioSet = true;
+    }
+
     private String setSublanguage() {
         String type = null;
         String able = mContext.getResources().getConfiguration().locale.getCountry();
@@ -594,6 +699,7 @@ public class SubTitleService extends ISubTitleService.Stub {
                 case SHOW_CONTENT:
                     if (subShowState == SUB_ON) {
                         addView();
+                        adjustImgRatioDft();
                         subTitleView.tick (msg.arg1);
                     }
                     break;
@@ -604,6 +710,7 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.stopSubThread(); //close insub parse thread
                         subTitleView.closeSubtitle();
                         subTitleView.clear();
+                        mRatioSet = false;
                     }
 
                     subTitleView.startSubThread(); //open insub parse thread
@@ -619,6 +726,7 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.closeSubtitle();
                         subTitleView.clear();
                         subShowState = SUB_OFF;
+                        mRatioSet = false;
                     }
                     break;
 
@@ -678,6 +786,7 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.stopSubThread(); //close insub parse thread
                         subTitleView.closeSubtitle();
                         subTitleView.clear();
+                        mRatioSet = false;
                     }
 
                     try {

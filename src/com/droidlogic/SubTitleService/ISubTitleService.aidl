@@ -6,6 +6,8 @@ interface ISubTitleService
     void openIdx(int idx);
     void close();
     int getSubTotal();
+    int getInnerSubTotal();
+    int getExternalSubTotal();
     void nextSub();
     void preSub();
     //void startInSubThread();
@@ -21,7 +23,6 @@ interface ISubTitleService
     void setTextStyle(int style);
     void setPosHeight(int height);
     void setImgSubRatio(float ratioW, float ratioH, int maxW, int maxH);
-    void setSurfaceViewParam(int x, int y, int w, int h);
     void clear();
     void resetForSeek();
     void hide();
@@ -30,4 +31,5 @@ interface ISubTitleService
     String getSubName(int idx);
     String getSubLanguage(int idx);
     boolean load(String path);
+    void setSurfaceViewParam(int x, int y, int w, int h);
 }

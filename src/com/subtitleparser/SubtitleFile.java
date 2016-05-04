@@ -318,16 +318,22 @@ public class SubtitleFile extends LinkedList {
             text = text.replaceAll ("\\{\\\\fn.*?\\}", "");
             text = text.replaceAll ("\\{\\\\r\\}", "");
             text = text.replaceAll ("\\{\\\\fs.*?\\}", "");
-            if (text.startsWith ("{\\pos(")) {
-                int idx = text.indexOf (")}m");
-                if ( (text.substring (idx + 3)).startsWith (" ")) {
-                    sl = new SubtitleLine (index, startTime, endTime, "");
-                }
-                else {
-                    sl = new SubtitleLine (index, startTime, endTime, text);
-                }
+            text = text.replaceAll ("\\{*?\\\\frx.*?\\}", "");
+            text = text.replaceAll ("\\{*?\\\\fad.*?\\}", "");
+            text = text.replaceAll ("\\{*?\\\\fs.*?\\}", "");
+            int idx = text.indexOf (")}m");
+            if (idx >= 0 && (text.substring (idx + 3)).startsWith (" ")) {
+                sl = new SubtitleLine (index, startTime, endTime, "");
             }
             else {
+                idx = text.indexOf ("0)}");
+                if (idx >= 0) {
+                    text = text.substring (idx + 3);
+                }
+                idx = text.indexOf ("500)}");
+                if (idx >= 0) {
+                    text = text.substring (idx + 5);
+                }
                 sl = new SubtitleLine (index, startTime, endTime, text);
             }
             try {

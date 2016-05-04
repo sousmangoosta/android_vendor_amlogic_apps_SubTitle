@@ -111,6 +111,10 @@ typedef struct
     unsigned rgba_pattern2;
     unsigned rgba_pattern3;
     char *data;
+    unsigned int spu_origin_display_w;  //for bitmap subtitle
+    unsigned int spu_origin_display_h;
+    unsigned short spu_start_x;
+    unsigned short spu_start_y;
 } subtitle_data_t;
 static subtitle_data_t inter_subtitle_data[MAX_SUBTITLE_PACKET_WRITE];
 
@@ -435,7 +439,7 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
                 || (spu_buf_piece[rd_oft++] != 0x4d)
                 || (spu_buf_piece[rd_oft++] != 0x4c)
                 || (spu_buf_piece[rd_oft++] != 0x55)
-                || (spu_buf_piece[rd_oft++] != 0xaa))
+                || ((spu_buf_piece[rd_oft++] & 0xfe) != 0xaa))
         {
             LOGI("\n wrong subtitle header :%x %x %x %x    %x %x %x %x    %x %x %x %x \n", spu_buf_piece[0], spu_buf_piece[1], spu_buf_piece[2], spu_buf_piece[3], spu_buf_piece[4], spu_buf_piece[5], spu_buf_piece[6], spu_buf_piece[7], spu_buf_piece[8], spu_buf_piece[9], spu_buf_piece[10], spu_buf_piece[11]);
             ret =
@@ -507,7 +511,8 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
                 duration_pts |= spu_buf_piece[rd_oft++] << 16;
                 duration_pts |= spu_buf_piece[rd_oft++] << 8;
                 duration_pts |= spu_buf_piece[rd_oft++];
-                LOGI("duration_pts is %d, current_length=%d  ,rd_oft is %d\n", duration_pts, current_length, rd_oft);
+                int has_alpha = spu_buf_piece[4] & 0x01;
+                LOGI("duration_pts is %d, current_length=%d  ,rd_oft is %d, has_alpha=%d\n", duration_pts, current_length, rd_oft, has_alpha);
                 avihandle = (DivXSubPictHdr *)(spu_buf_piece + rd_oft);
                 spu->spu_data = malloc(VOB_SUB_SIZE);
                 memset(spu->spu_data, 0, VOB_SUB_SIZE);
@@ -548,11 +553,15 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
                 LOGI(" spu->rgba_background == 0x%x,  spu->rgba_pattern1 == 0x%x\n", spu->rgba_background, spu->rgba_pattern1);
                 LOGI(" spu->rgba_pattern2 == 0x%x,  spu->rgba_pattern3 == 0x%x\n", spu->rgba_pattern2, spu->rgba_pattern3);
                 ptrPXDRead = (unsigned short *) & (avihandle->rleData);
+                //if has alpha, header had another 4 bytes
+                if (has_alpha)
+                    ptrPXDRead += 2;
+
                 FillPixel(ptrPXDRead, spu->spu_data, 1, spu,
                           avihandle->field_offset);
-                ptrPXDRead =
-                    (unsigned long *)((unsigned long)(&avihandle->rleData) +
-                                       (unsigned long)(avihandle->field_offset));
+                //ptrPXDRead =
+                //    (unsigned long *)((unsigned long)(&avihandle->rleData) +
+                //                       (unsigned long)(avihandle->field_offset));
                 FillPixel(ptrPXDRead, spu->spu_data + VOB_SUB_SIZE / 2,
                           2, spu, avihandle->field_offset);
                 ret = 0;
@@ -860,19 +869,26 @@ int write_subtitle_file(AML_SPUVAR *spu)
     inter_subtitle_data[file_position].resize_width = spu->spu_width;
     inter_subtitle_data[file_position].resize_height = spu->spu_height;
     inter_subtitle_data[file_position].rgba_enable = spu->rgba_enable;
-    inter_subtitle_data[file_position].rgba_background =
-        spu->rgba_background;
+    inter_subtitle_data[file_position].rgba_background = spu->rgba_background;
     inter_subtitle_data[file_position].rgba_pattern1 = spu->rgba_pattern1;
     inter_subtitle_data[file_position].rgba_pattern2 = spu->rgba_pattern2;
     inter_subtitle_data[file_position].rgba_pattern3 = spu->rgba_pattern3;
-    LOGI(" write_subtitle_file[%d], sublen=%d, subtitle_type is 0x%x size: %d  subtitle_pts =%u,subtitle_delay_pts=%u \n", file_position, sublen, inter_subtitle_data[read_position].subtitle_type, inter_subtitle_data[file_position].data_size, inter_subtitle_data[file_position].subtitle_pts, inter_subtitle_data[file_position].subtitle_delay_pts);
+    LOGI(" write_subtitle_file[%d], sublen=%d, subtitle_type is 0x%x size: %d  subtitle_pts =%u,subtitle_delay_pts=%u \n",file_position,sublen,inter_subtitle_data[read_position].subtitle_type,
+        inter_subtitle_data[file_position].data_size,inter_subtitle_data[file_position].subtitle_pts,inter_subtitle_data[file_position].subtitle_delay_pts);
     if (spu->subtitle_type == SUBTITLE_PGS)
     {
         inter_subtitle_type = SUBTITLE_PGS;
         file_position = ADD_SUBTITLE_POSITION(file_position);
     }
-    else if (spu->subtitle_type == SUBTITLE_DVB)
-    {
+    else if(spu->subtitle_type == SUBTITLE_DVB){
+        inter_subtitle_data[file_position].spu_origin_display_w = spu->spu_origin_display_w;
+        inter_subtitle_data[file_position].spu_origin_display_h = spu->spu_origin_display_h;
+        inter_subtitle_data[file_position].spu_start_x = spu->spu_start_x;
+        inter_subtitle_data[file_position].spu_start_y = spu->spu_start_y;
+
+        LOGI("spu_origin_display[%d,%d],start[%d,%d]-\n",inter_subtitle_data[file_position].spu_origin_display_w,
+            inter_subtitle_data[file_position].spu_origin_display_h,inter_subtitle_data[file_position].spu_start_x,
+            inter_subtitle_data[file_position].spu_start_y);
         inter_subtitle_type = SUBTITLE_DVB;
         file_position = ADD_SUBTITLE_POSITION(file_position);
     }
@@ -890,7 +906,7 @@ int write_subtitle_file(AML_SPUVAR *spu)
 
 int read_subtitle_file()
 {
-    LOGI("subtitle data address is %x\n\n",  inter_subtitle_data[file_position].data);
+    LOGI("subtitle data address is %p\n", inter_subtitle_data[file_position].data);
     return 0;
 }
 
@@ -1046,6 +1062,26 @@ void free_inter_spu_data()
     return;
 }
 
+void free_last_inter_spu_data()
+{
+    int tmp_pos = 0;
+    if (read_position > 0)
+    {
+        tmp_pos = read_position - 1;
+    }
+    else
+    {
+        tmp_pos = sublen - 1;
+    }
+
+    if (inter_subtitle_data[tmp_pos].data)
+    {
+        free(inter_subtitle_data[tmp_pos].data);
+        inter_subtitle_data[tmp_pos].data = NULL;
+    }
+    return;
+}
+
 char *get_inter_spu_data()
 {
     return inter_subtitle_data[read_position].data;
@@ -1061,6 +1097,26 @@ int get_inter_spu_height()
 {
     return inter_subtitle_data[read_position].resize_height;
     //return inter_subtitle_data[read_position].subtitle_height;
+}
+
+int get_inter_spu_origin_width()
+{
+    return inter_subtitle_data[read_position].spu_origin_display_w;
+}
+
+int get_inter_spu_origin_height()
+{
+    return inter_subtitle_data[read_position].spu_origin_display_h;
+}
+
+int get_inter_start_x()
+{
+    return inter_subtitle_data[read_position].spu_start_x;
+}
+
+int get_inter_start_y()
+{
+    return inter_subtitle_data[read_position].spu_start_y;
 }
 
 unsigned get_inter_spu_pts()
@@ -1398,7 +1454,7 @@ int close_subtitle()
     }
     restlen = 0;
     int i = 0;
-    for (i = 0; i < MAX_SUBTITLE_PACKET_WRITE; i++)
+    for (i = 0; i < sublen; i++)
     {
         if (inter_subtitle_data[i].data)
             free(inter_subtitle_data[i].data);
