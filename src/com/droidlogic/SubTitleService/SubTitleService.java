@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.droidlogic.app.SystemControlManager;
+import com.droidlogic.app.ISubTitleService;
 
 public class SubTitleService extends ISubTitleService.Stub {
     private static final String TAG = "SubTitleService";
