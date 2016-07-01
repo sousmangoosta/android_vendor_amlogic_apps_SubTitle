@@ -721,14 +721,14 @@ public class SubTitleService extends ISubTitleService.Stub {
                     break;
 
                 case CLOSE:
-                    if (subShowState == SUB_ON) {
+                    //if (subShowState == SUB_ON) {
                         removeView();
                         subTitleView.stopSubThread(); //close insub parse thread
                         subTitleView.closeSubtitle();
                         subTitleView.clear();
                         subShowState = SUB_OFF;
                         mRatioSet = false;
-                    }
+                    //}
                     break;
 
                 case SET_TXT_COLOR:
