@@ -115,6 +115,9 @@ public class SubManager {
             return type;
         }
 
+        public String getFont() {
+            return subtitle.getFont();
+        }
         public int getDisplayWidth() {
             //Log.d(TAG, "display_width:"+display_width);
             return display_width;

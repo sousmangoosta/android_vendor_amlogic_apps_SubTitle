@@ -246,7 +246,9 @@ public class Subtitle {
             return FileIO.dectFileType (file, encoding);
         }
 
-
+        public String getFont() {
+            return FileIO.getFont();
+        }
 
         private static String checkEncoding (String fileName, String enc) {
             BufferedInputStream bis = null;

@@ -12,6 +12,7 @@ import android.util.Log;
 * @author
 */
 public class FileIO {
+    static String mFont = null;
         /**
         * Fetch the entire contents of a text file, and return it in a String.
         * This style of implementation does not throw Exceptions to the caller.
@@ -56,6 +57,11 @@ public class FileIO {
             return contents.toString();
         }
 
+        public static String getFont() {
+            Log.i("getFont", "mFont:" + mFont);
+            return mFont;
+        }
+
         public static Subtitle.SUBTYPE dectFileType (String filePath, String encoding) {
             BufferedReader input = null;
             Subtitle.SUBTYPE type = Subtitle.SUBTYPE.SUB_INVALID;
@@ -82,15 +88,39 @@ public class FileIO {
             Pattern LRC_Pattern = Pattern.compile ("\\[\\d+:\\d+.\\d+\\]" + "(.*?)");
             Pattern XML_Pattern = Pattern.compile ("<Subtitle>");
             Matcher matcher = null;
+            int i = 0;
+            int idx = 0;
             try {
                 //use buffering
                 //this implementation reads one line at a time
                 //          input = new BufferedReader( new FileReader(filePath));
                 input = new BufferedReader (new InputStreamReader (new FileInputStream (new File (filePath)), encoding), 1024);
                 String line = null; //not declared within while loop
+                mFont = null; //reset font
                 try {
                     while ( (line = input.readLine()) != null && testMaxLines > 0) {
                         Log.v ("dectFileType", " -----new line--------" + (60 - testMaxLines) + "  " + line);
+
+                        if (line.indexOf("Format:") >= 0) {
+                            String[] propNames = line.split(", ");
+                            for (String propName: propNames) {
+                                if (propName.equals("Fontname")) {
+                                    break;
+                                }
+                                idx++;
+                            }
+                        }
+                        else if (line.indexOf("Style:") >= 0) {
+                            String[] propTypes = line.split(",");
+                            for (String propType: propTypes) {
+                                if (i == idx) {
+                                    mFont = propType;
+                                    break;
+                                }
+                                i++;
+                            }
+                        }
+
                         if (line.length() > 3000) {
                             type = Subtitle.SUBTYPE.SUB_INVALID;
                             break;

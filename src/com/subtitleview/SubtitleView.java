@@ -2,6 +2,7 @@ package com.subtitleview;
 
 import android.R.bool;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -36,6 +37,12 @@ public class SubtitleView extends FrameLayout {
         private ImageView mImageView = null;
         private TextView mTextView = null;
 
+        //for font
+        Context mContext;
+        private String mFont = null;
+        Typeface mSimSun;
+        Typeface mSimHei;
+
         //add for pgs show
         private SubData dataPgsA = null;
         private SubData dataPgsB = null;
@@ -66,12 +73,13 @@ public class SubtitleView extends FrameLayout {
         }
 
         private void init (Context context) {
+            mContext = context;
             mImageView = new ImageView (context);
             mTextView = new TextView (context);
             if (mTextView != null) {
                 mTextView.setTextColor (0);
                 mTextView.setTextSize (12);
-                mTextView.setTypeface (null, Typeface.BOLD);
+                //mTextView.setTypeface (null, Typeface.BOLD);
                 mTextView.setGravity (Gravity.CENTER);
             }
             wscale = 1.000f;
@@ -267,10 +275,18 @@ public class SubtitleView extends FrameLayout {
                     byte sttmp_2[] = sttmp.getBytes();
                     if (sttmp_2.length > 0 && 0 == sttmp_2[ sttmp_2.length - 1]) {
                         sttmp_2[ sttmp_2.length - 1] = 0x20;
-                    }
-                    if (mTextView != null) {
-                        mTextView.setText (new String (sttmp_2) );
-                        this.addView (mTextView);
+                        if (mTextView != null) {
+                            if (mFont != null && (mFont.indexOf("hei") >= 0
+                                || mFont.indexOf("Hei") >= 0)) {
+                                mTextView.setTypeface(mSimHei);
+                            }
+                            else if (mFont != null && (mFont.indexOf("sun") >= 0
+                                || mFont.indexOf("Sun") >= 0)) {
+                                mTextView.setTypeface(mSimSun);
+                            }
+                            mTextView.setText (new String (sttmp_2) );
+                            this.addView (mTextView);
+                        }
                     }
                 }
             }
@@ -562,6 +578,10 @@ public class SubtitleView extends FrameLayout {
             dataPgsAShowed = false;
             dataPgsBShowed = false;
             Subtitle.SUBTYPE tmp = SubManager.getinstance().setFile (file, enc);
+            mFont = SubManager.getinstance().getFont();
+            AssetManager mgr = mContext.getAssets();
+            mSimSun = Typeface.createFromAsset(mgr, "fonts/simsun.ttf");
+            mSimHei = Typeface.createFromAsset(mgr, "fonts/simhei.ttf");
             return tmp;
         }
 
