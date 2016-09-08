@@ -275,18 +275,18 @@ public class SubtitleView extends FrameLayout {
                     byte sttmp_2[] = sttmp.getBytes();
                     if (sttmp_2.length > 0 && 0 == sttmp_2[ sttmp_2.length - 1]) {
                         sttmp_2[ sttmp_2.length - 1] = 0x20;
-                        if (mTextView != null) {
-                            if (mFont != null && (mFont.indexOf("hei") >= 0
-                                || mFont.indexOf("Hei") >= 0)) {
-                                mTextView.setTypeface(mSimHei);
-                            }
-                            else if (mFont != null && (mFont.indexOf("sun") >= 0
-                                || mFont.indexOf("Sun") >= 0)) {
-                                mTextView.setTypeface(mSimSun);
-                            }
-                            mTextView.setText (new String (sttmp_2) );
-                            this.addView (mTextView);
+                    }
+                    if (mTextView != null) {
+                        if (mFont != null && (mFont.indexOf("hei") >= 0
+                            || mFont.indexOf("Hei") >= 0)) {
+                            mTextView.setTypeface(mSimHei);
                         }
+                        else if (mFont != null && (mFont.indexOf("sun") >= 0
+                            || mFont.indexOf("Sun") >= 0)) {
+                            mTextView.setTypeface(mSimSun);
+                        }
+                        mTextView.setText (new String (sttmp_2) );
+                        this.addView (mTextView);
                     }
                 }
             }
