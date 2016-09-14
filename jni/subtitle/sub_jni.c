@@ -298,7 +298,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
         }
         jbyteArray array = (*env)->NewByteArray(env, sub_size);
         (*env)->SetByteArrayRegion(env, array, 0, sub_size,
-                                   get_inter_spu_data());
+                                   (jbyte *)get_inter_spu_data());
         LOGE("getrawdata: SetByteArrayRegion finish");
         jobject obj = (*env)->NewObject(env, cls, constrforstr, array,
                                         get_inter_spu_delay() / 90, 0);
@@ -322,7 +322,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
         }
         jbyteArray array = (*env)->NewByteArray(env, sub_size);
         (*env)->SetByteArrayRegion(env, array, 0, sub_size,
-                                   get_inter_spu_data());
+                                   (jbyte *)get_inter_spu_data());
         int sub_start_pts =
             (get_inter_spu_pts() - get_subtitle_startpts()) / 90;
         jobject obj =
@@ -347,7 +347,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
         //}
         jintArray array = (*env)->NewIntArray(env, sub_size);
         (*env)->SetIntArrayRegion(env, array, 0, sub_size,
-                                  get_inter_spu_data());
+                                  (jint *)get_inter_spu_data());
         LOGE("getrawdata: SetByteArrayRegion finish");
         int sub_start_pts = (get_inter_spu_pts() - get_subtitle_startpts()) / 90;   //- get_subtitle_startpts() adjust offset for pgs showing
         int delay_pts = get_inter_spu_delay();
@@ -389,7 +389,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
              get_inter_spu_width());
         jintArray array = (*env)->NewIntArray(env, sub_size);
         (*env)->SetIntArrayRegion(env, array, 0, sub_size,
-                                  get_inter_spu_data());
+                                  (jint *)get_inter_spu_data());
         jobject obj =
             (*env)->NewObject(env, cls, constrforpgs, array, 1,
                               get_inter_spu_width(),

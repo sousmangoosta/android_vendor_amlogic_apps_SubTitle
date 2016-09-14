@@ -2100,14 +2100,6 @@ void idxsub_close_subtitle()
     }
 }
 
-//change data from 2bit to 32bit
-void idxsub_parser_data(const unsigned char *source, long length, int linewidth,
-                        unsigned int *dist, int subtitle_alpha)
-{
-    covert2bto32b(source, length, linewidth, dist, subtitle_alpha);
-    return 0;
-}
-
 void covert2bto32b(const unsigned char *source, long length, int bytesPerLine,
                    unsigned int *dist, int subtitle_alpha)
 {
@@ -2249,4 +2241,12 @@ void covert2bto32b(const unsigned char *source, long length, int bytesPerLine,
     //    close(fdto);
     //
     //  LOGE("write bytes %d  / %d ",bytes, length*16);
+}
+
+//change data from 2bit to 32bit
+void idxsub_parser_data(const unsigned char *source, long length, int linewidth,
+                        unsigned int *dist, int subtitle_alpha)
+{
+    covert2bto32b(source, length, linewidth, dist, subtitle_alpha);
+    return ;
 }
