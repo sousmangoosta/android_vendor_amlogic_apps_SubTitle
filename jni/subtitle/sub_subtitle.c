@@ -8,6 +8,7 @@
 //header file
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -22,7 +23,9 @@
 #include "sub_control.h"
 #include "sub_subtitle.h"
 #include "sub_vob_sub.h"
+#include "sub_dvb_sub.h"
 #include "sub_pgs_sub.h"
+#include "sub_set_sys.h"
 
 typedef struct _DivXSubPictColor
 {

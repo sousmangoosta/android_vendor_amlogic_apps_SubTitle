@@ -6,6 +6,7 @@
 int get_vob_spu(char *input_buf, int *buf_size, unsigned length,
                 AML_SPUVAR *spu);
 void dvdsub_init_decoder(void);
+unsigned short doDCSQC(unsigned char *pdata, unsigned char *pend);
 
 typedef enum
 {

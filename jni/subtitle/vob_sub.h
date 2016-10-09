@@ -89,7 +89,7 @@ typedef struct
     int height;
     unsigned short colorcode;
     unsigned short contrast;
-    unsigned prtData;
+    unsigned long prtData;
     unsigned cls;
 } Vob_subtitle_showdata;
 
@@ -232,6 +232,11 @@ typedef struct
 extern int init_subtitle(char *fileurl);
 
 extern subtitlevobsub_t *getIdxSubData(int ptms);
+
+void idxsub_parser_data(const unsigned char *source, long length, int linewidth,
+                        unsigned int *dist, int subtitle_alpha);
+void idxsub_close_subtitle();
+int idxsub_init_subtitle(char *fileurl, int index);
 
 /*@}*/
 #endif              /* VOB_SUB_H */

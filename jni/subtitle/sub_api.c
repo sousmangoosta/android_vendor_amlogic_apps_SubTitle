@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "list.h"
 #include "sub_api.h"

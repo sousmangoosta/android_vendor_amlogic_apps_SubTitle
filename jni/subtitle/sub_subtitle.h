@@ -73,5 +73,28 @@ int subtitle_thread_create();
 int init_subtitle_file();
 int close_subtitle();
 void set_subthread(int runing);
+int write_subtitle_file(AML_SPUVAR *spu);
+int get_inter_sub_type();
+int get_inter_spu_resize_size();
+int *parser_inter_spu(int *buffer);
+int get_inter_spu_origin_width();
+int get_inter_spu_origin_height();
+char *get_inter_spu_data();
+int fill_resize_data(int *dst_data, int *src_data);
+void free_last_inter_spu_data();
+int get_inter_spu_width();
+int get_inter_spu_height();
+unsigned get_inter_spu_pts();
+int add_read_position();
+unsigned get_inter_spu_delay();
+int get_subtitle_buffer_size();
+int get_inter_spu_packet(int pts);
+int get_inter_spu_type();
+int add_file_position();
+int get_inter_spu_size();
+
+extern unsigned char FillPixel(char *ptrPXDRead, char *pixelOut, int n,
+                        AML_SPUVAR *sub_frame, int field_offset);
+extern int get_dvb_spu(AML_SPUVAR *spu, int read_handle);
 
 #endif

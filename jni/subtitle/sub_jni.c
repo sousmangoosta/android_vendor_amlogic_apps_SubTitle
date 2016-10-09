@@ -7,9 +7,11 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <Amsyswrite.h>
 
+#include "sub_subtitle.h"
 #include "sub_set_sys.h"
 #include "vob_sub.h"
 
@@ -525,7 +527,7 @@ JNIEXPORT jobject JNICALL getidxsubrawdata(JNIEnv *env, jclass cl, jint msec)
     }
     LOGE("start parser_data  spu_alpha=0x%x \n",
          vobsub->vob_subtitle_config.contrast);
-    idxsub_parser_data(vobsub->vob_subtitle_config.prtData, raw_byte,
+    idxsub_parser_data((unsigned char *)vobsub->vob_subtitle_config.prtData, raw_byte,
                        (vobsub->vob_subtitle_config.width) / 4, idxsubdata,
                        vobsub->vob_subtitle_config.contrast);
     LOGE("parser_data over\n\n");

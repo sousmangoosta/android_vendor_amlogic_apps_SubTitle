@@ -11,12 +11,15 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include "log_print.h"
 
 #include "vob_sub.h"
+#include "sub_vob_sub.h"
+
 #include <cutils/properties.h>
 #include <android/log.h>
 
@@ -1448,7 +1451,7 @@ unsigned char vob_fill_pixel(subtitlevobsub_t *subtitlevobsub, int n)
     return 0;
 }
 
-//extern unsigned short doDCSQC(unsigned char *pdata,unsigned char *pend);
+extern unsigned short doDCSQC(unsigned char *pdata,unsigned char *pend);
 
 static int do_vob_sub_cmd(subtitlevobsub_t *subtitlevobsub,
                           unsigned char *packet)

@@ -8,6 +8,7 @@
  */
 
 #include "sub_dvb_sub.h"
+#include "sub_subtitle.h"
 
 static unsigned SPU_RD_HOLD_SIZE = 0x20;
 #define OSD_HALF_SIZE (1920*1280/8)
@@ -145,6 +146,76 @@ static void png_save(const char *filename, uint8_t *bitmap, int w, int h,
     system(command);
 }
 #endif
+
+#if 1
+void *av_malloc(unsigned int size)
+{
+    void *ptr = NULL;
+    ptr = malloc(size);
+    return ptr;
+}
+
+void *av_realloc(void *ptr, unsigned int size)
+{
+    return realloc(ptr, size);
+}
+
+void av_freep(void **arg)
+{
+    if (*arg)
+        free(*arg);
+    *arg = NULL;
+}
+
+void av_free(void *arg)
+{
+    if (arg)
+        free(arg);
+}
+
+void *av_mallocz(unsigned int size)
+{
+    void *ptr = malloc(size);
+    if (ptr)
+        memset(ptr, 0, size);
+    return ptr;
+}
+
+static inline uint32_t bytestream_get_be32(const uint8_t **ptr)
+{
+    uint32_t tmp;
+    tmp =
+        (*ptr)[3] | ((*ptr)[2] << 8) | ((*ptr)[1] << 16) | ((*ptr)[0] <<
+                24);
+    *ptr += 4;
+    return tmp;
+}
+
+static inline uint32_t bytestream_get_be24(const uint8_t **ptr)
+{
+    uint32_t tmp;
+    tmp = (*ptr)[2] | ((*ptr)[1] << 8) | ((*ptr)[0] << 16);
+    *ptr += 3;
+    return tmp;
+}
+
+static inline uint32_t bytestream_get_be16(const uint8_t **ptr)
+{
+    uint32_t tmp;
+    tmp = (*ptr)[1] | ((*ptr)[0] << 8);
+    *ptr += 2;
+    return tmp;
+}
+
+static inline uint8_t bytestream_get_byte(const uint8_t **ptr)
+{
+    uint8_t tmp;
+    tmp = **ptr;
+    *ptr += 1;
+    return tmp;
+}
+#endif
+
 static int dvb_sub_valid_flag = 0;
 static void png_save2(const char *filename, uint32_t *bitmap, int w, int h)
 {
