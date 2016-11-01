@@ -753,10 +753,10 @@ subtitle_t *internal_sub_read_line_microdvd(int fd, subtitle_t *current)
             return NULL;
         }
     }
-    while ((sscanf(line, "{%ld}{}%[^\r\n]", &(current->start), line2) < 2)
+    while ((sscanf(line, "{%d}{}%[^\r\n]", &(current->start), line2) < 2)
             &&
             (sscanf
-             (line, "{%ld}{%ld}%[^\r\n]", &(current->start), &(current->end),
+             (line, "{%ld}{%d}%[^\r\n]", &(current->start), &(current->end),
               line2) < 3));
     if ((current->start && current->start == 1)
             || (current->start && current->end
@@ -805,7 +805,7 @@ subtitle_t *internal_sub_read_line_mpl1(int fd, subtitle_t *current)
             return NULL;
     }
     while ((sscanf
-            (line, "%ld,%ld,%ld,%[^\r\n]", &(current->start),
+            (line, "%d,%d,%d,%[^\r\n]", &(current->start),
              &(current->end), &tmp, line2) < 4));
     //parse pts rate
     if ((current->start && current->start == 1)
@@ -853,7 +853,7 @@ subtitle_t *internal_sub_read_line_mpl2(int fd, subtitle_t *current)
             return NULL;
     }
     while ((sscanf
-            (line, "[%ld][%ld]%[^\r\n]", &(current->start), &(current->end),
+            (line, "[%d][%d]%[^\r\n]", &(current->start), &(current->end),
              line2) < 3));
     current->start *= 10;
     current->end *= 10;
@@ -1474,7 +1474,7 @@ subtitle_t *internal_sub_read_line_pjs(int fd, subtitle_t *current)
         return NULL;
     }
     /* get the time */
-    if (sscanf(s, "%ld,%ld,", &(current->start), &(current->end)) < 2)
+    if (sscanf(s, "%d,%d,", &(current->start), &(current->end)) < 2)
     {
         return ERR;
     }
@@ -1651,7 +1651,7 @@ subtitle_t *internal_sub_read_line_aqt(int fd, subtitle_t *current)
         {
             return NULL;
         }
-        if (!(sscanf(line, "-->> %ld", &(current->start)) < 1))
+        if (!(sscanf(line, "-->> %d", &(current->start)) < 1))
         {
             break;
         }
@@ -1705,7 +1705,7 @@ subtitle_t *internal_sub_read_line_aqt(int fd, subtitle_t *current)
         {
             return NULL;
         }
-        if (!(sscanf(line, "-->> %ld", &(current->end)) < 1))
+        if (!(sscanf(line, "-->> %d", &(current->end)) < 1))
         {
             break;
         }
