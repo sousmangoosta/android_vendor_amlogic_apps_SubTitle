@@ -28,7 +28,11 @@
 
 /* Maximal length of line of a subtitle */
 #define LINE_LEN                    1024*5
-
+typedef enum
+ {
+    false,
+    true
+} bool;
 typedef enum
 {
     SUB_ALIGNMENT_BOTTOMLEFT = 1,

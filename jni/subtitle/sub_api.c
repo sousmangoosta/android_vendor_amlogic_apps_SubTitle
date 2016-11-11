@@ -49,6 +49,7 @@ static unsigned subfile_read;
 
 //init pts rate
 int ptsrate = 24;
+bool ptsRateGot = true;
 
 static inline int subtitle_uni_Utf16toUtf8(const UTF16 *in, int inLen,
         UTF8 *out, int outMax)
@@ -733,18 +734,17 @@ subtitle_t *internal_sub_read_line_microdvd(int fd, subtitle_t *current)
     char line2[LINE_LEN + 1];
     char *p, *next;
     int i;
-    /*int ptsrate = 0;
-       /*ptsrate = get_subtitle_fps() / 100;
-
-       if (get_subtitle_fps() % 100)
-       ptsrate ++;
-
-       if (ptsrate <= 0)
-       {
-       ptsrate = 24; //30;
-       }
-
-       log_print("--------internal_sub_read_line_microdvd---get frame rate: %f--\n", ptsrate); */
+    if (!ptsRateGot) {
+        ptsrate = get_subtitle_fps() / 100;
+        if (get_subtitle_fps() % 100) {
+            ptsrate ++;
+        }
+        if (ptsrate <= 0) {
+            ptsrate = 24; //30;
+        }
+        ptsRateGot = true;
+        log_print("--------internal_sub_read_line_microdvd---get frame rate: %f--\n", ptsrate);
+    }
     current->end = 0;
     do
     {
@@ -813,6 +813,7 @@ subtitle_t *internal_sub_read_line_mpl1(int fd, subtitle_t *current)
                 && current->start == current->end == 1))
     {
         ptsrate = atoi(line2);
+        ptsRateGot = true;
     }
     current->start = (current->start * 100) / ptsrate;
     current->end = (current->end * 100) / ptsrate;
@@ -2190,6 +2191,7 @@ static int internal_sub_autodetect(int fd)
 }
 
 SUBAPI void reset_variate() {
+    ptsRateGot = false;
     mpsub_position = 0;
 }
 
