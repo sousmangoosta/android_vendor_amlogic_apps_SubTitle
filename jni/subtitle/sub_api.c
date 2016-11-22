@@ -21,6 +21,7 @@
 #include "list.h"
 #include "sub_api.h"
 #include "log_print.h"
+#include "sub_set_sys.h"
 //#include "player_priv.h"
 
 #define DUMP_SUB
