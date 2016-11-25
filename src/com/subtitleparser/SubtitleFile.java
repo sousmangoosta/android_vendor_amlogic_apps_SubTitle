@@ -295,6 +295,40 @@ public class SubtitleFile extends LinkedList {
             Log.d ("subtitleFile", "appendSubtitleFile" + index);
         }
 
+        public  String bytesToHexString(byte[] bArray) {
+            StringBuffer sb = new StringBuffer(bArray.length);
+            String sTemp;
+            for (int i = 0; i < bArray.length; i++) {
+                sTemp = Integer.toHexString(0xFF & bArray[i]);
+                if (sTemp.length() < 2)
+                    sb.append(0);
+                    sb.append(sTemp.toUpperCase());
+            }
+            return sb.toString();
+        }
+
+        public String stringToHexString(String s) {
+            StringBuffer sb = new StringBuffer(s.length());
+            String sTemp;
+            for (int i = 0; i < s.length(); i++) {
+                sTemp = Integer.toHexString(s.charAt(i));
+                if (sTemp.length() < 2)
+                    sb.append(0);
+                    sb.append(sTemp.toUpperCase());
+            }
+            return sb.toString();
+        }
+        public boolean JudgeGBK(byte[] bArray) {
+            boolean hasGBK = false;
+            for (int i = 0; i < bArray.length-1; i++) {
+                int bArray1 = bArray[i] & 0xff;
+                int bArray2 = bArray[i+1]& 0xff;
+                if (bArray1 > 128 && bArray1 <255 && bArray2 > 63 && bArray2 <255 && bArray2 != 127) {
+                    hasGBK = true;
+                }
+            }
+            return hasGBK;
+        }
         public void appendSubtitle (int index, int start, int end, byte[] bytearray, String encode1) {
             //public int appendSubtitle(int index) {
             String encode = encode1;
@@ -305,6 +339,24 @@ public class SubtitleFile extends LinkedList {
             SubtitleTime startTime = null;
             SubtitleTime endTime = null;
             String text = null;
+            String texttemp = "";
+            String ISO88591S = "iso88591";
+            String GBKS = "GBK";
+            String temp1 = "";
+            String temp3 = "";
+            if (encode.equals(GBKS) && !JudgeGBK(bytearray)) {
+                texttemp = bytesToHexString(bytearray);
+                try {
+                    temp1 = new String(bytearray,ISO88591S);
+                } catch (UnsupportedEncodingException e) {
+                    Log.e("subtitleFile", "erro while decodeing with iso88591");
+                }
+                temp3 = stringToHexString(temp1);
+                if (texttemp.equals(temp3)) {
+                    encode = ISO88591S;
+                }
+            }
+
             try {
                 text = new String (bytearray, encode);
             }
