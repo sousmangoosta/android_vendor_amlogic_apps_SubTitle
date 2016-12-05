@@ -577,7 +577,7 @@ public class SubTitleService extends ISubTitleService.Stub {
             mRatio = ratioViewH;
         }
         RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) subTitleView.getLayoutParams();
-        layoutParams.bottomMargin=(int)(mBottomMargin * ratioFBH);
+        layoutParams.bottomMargin=(int)(mBottomMargin * ratioFBH * ratioViewH);
         subTitleView.setLayoutParams(layoutParams);
         mWindowLayoutParams.x = (int)(x * ratioFBW);
         mWindowLayoutParams.y = (int)(y * ratioFBH);
