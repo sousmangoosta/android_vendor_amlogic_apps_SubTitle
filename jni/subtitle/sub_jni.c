@@ -303,7 +303,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
                                    (jbyte *)get_inter_spu_data());
         LOGE("getrawdata: SetByteArrayRegion finish");
         jobject obj = (*env)->NewObject(env, cls, constrforstr, array,
-                                        get_inter_spu_delay() / 90, 0);
+                                        get_inter_spu_delay() / 90, NULL);
         LOGE("getrawdata: NewObject  finish");
         add_read_position();
         if (!obj)
@@ -329,7 +329,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
             (get_inter_spu_pts() - get_subtitle_startpts()) / 90;
         jobject obj =
             (*env)->NewObject(env, cls, constrfortt, array, 0, sub_size,
-                              sub_start_pts, 0, 0);
+                              sub_start_pts, 0, NULL);
         LOGE("getrawdata: NewObject  finish");
         add_read_position();
         if (!obj)
@@ -363,7 +363,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
             (*env)->NewObject(env, cls, constrforpgs, array, 1,
                               get_inter_spu_width(),
                               get_inter_spu_height(), 0, 0, sub_size,
-                              sub_start_pts, delay_pts, 0);
+                              sub_start_pts, delay_pts, NULL);
         LOGE("getrawdata: NewObject  finish");
         free_last_inter_spu_data();
         add_read_position();
@@ -396,7 +396,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
             (*env)->NewObject(env, cls, constrforpgs, array, 1,
                               get_inter_spu_width(),
                               get_inter_spu_height(), get_inter_spu_origin_width(), get_inter_spu_origin_height(), sub_size,
-                              start_time, delay_time, 0);
+                              start_time, delay_time, NULL);
         free_last_inter_spu_data();
         add_read_position();
         if (!obj)
@@ -451,7 +451,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
                                         get_inter_spu_height(),
                                         (get_inter_spu_delay() -
                                          get_subtitle_startpts()) / 90,
-                                        0);
+                                        NULL);
         add_read_position();
         if (!obj)
         {
@@ -536,7 +536,7 @@ JNIEXPORT jobject JNICALL getidxsubrawdata(JNIEnv *env, jclass cl, jint msec)
     jobject obj = (*env)->NewObject(env, cls, constr, array, 1,
                                     vobsub->vob_subtitle_config.width,
                                     vobsub->vob_subtitle_config.height,
-                                    vobsub->cur_endpts100 / 90, 0);
+                                    vobsub->cur_endpts100 / 90, NULL);
     if (!obj)
     {
         LOGE("parseSubtitleFile: failed to create an object");

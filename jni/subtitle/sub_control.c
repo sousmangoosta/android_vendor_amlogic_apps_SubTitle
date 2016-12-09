@@ -28,8 +28,9 @@ int subtitle_poll_sub_fd(int sub_fd, int timeout)
 
 int subtitle_get_sub_size_fd(int sub_fd)
 {
-    int sub_size, r;
-    r = ioctl(sub_fd, AMSTREAM_IOC_SUB_LENGTH, (unsigned long)&sub_size);
+    unsigned long sub_size;
+    int r;
+    r = ioctl(sub_fd, AMSTREAM_IOC_SUB_LENGTH, &sub_size);
     if (r < 0)
         return 0;
     else
