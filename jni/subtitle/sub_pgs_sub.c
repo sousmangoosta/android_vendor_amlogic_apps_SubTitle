@@ -24,6 +24,8 @@ static unsigned SPU_RD_HOLD_SIZE = 0x20;
 static int read_pgs_byte = 0;
 static draw_pixel_fun_t pgs_draw_pixel_fun_ = NULL;
 static subtitlepgs_t subtitle_pgs;
+extern int subtitle_status;
+
 
 int init_pgs_subtitle()
 {
@@ -391,6 +393,9 @@ int parser_one_pgs(AML_SPUVAR *spu)
         return -1;
     }
     memset(subtitle_pgs.showdata.result_buf, 0x0, buffer_size);
+    if (subtitle_status == SUB_STOP) {
+        return 0;
+    }
     af_pgs_subtitle_rlebitmap_render(&(subtitle_pgs.showdata),
                                      &subtitle_pgs.showdata, 1);
     if (subtitle_pgs.showdata.image_width == 1920 &&
@@ -545,6 +550,9 @@ int get_pgs_spu(AML_SPUVAR *spu, int read_handle)
 DECODE_START:
     while (1)
     {
+        if (subtitle_status == SUB_STOP) {
+            return 0;
+        }
         pgs_pts = pgs_dts = 0;
         pgs_packet_length = pgs_pes_header_length = 0;
         packet_header = 0;
@@ -558,6 +566,8 @@ DECODE_START:
         uVobSPU.spu_cache_pos = 0;
         while (read_spu_buf(read_handle, tmpbuf, 1) == 1)
         {
+            if (subtitle_status == SUB_STOP)
+                return 0;
             packet_header = (packet_header << 8) | tmpbuf[0];
             LOGI("## get_pgs_spu %x,%x,%x,%x,%llx,-------------\n",
                  tmpbuf[0], tmpbuf[1], tmpbuf[2], tmpbuf[3],
@@ -790,7 +800,8 @@ DECODE_START:
                          pgs_packet_length);
                     subtitle_pgs.showdata.pts = pgs_dts;
                     if (subtitle_get_sub_size_fd
-                            (read_handle) < pgs_packet_length)
+                            (read_handle) < pgs_packet_length ||
+                            subtitle_status == SUB_STOP)
                     {
                         pgs_ret = 0;
                         if (buf) {
@@ -799,6 +810,7 @@ DECODE_START:
                         }
                         goto pgs_decode_end;
                     }
+
                     if (buf)
                     {
                         memset(buf, 0x0,
@@ -875,6 +887,13 @@ aml_soft_demux:
             spu->pts = pgs_pts;
             LOGI("## 4444 %x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,--%d,%x,%x,-------------\n", tmpbuf[0], tmpbuf[1], tmpbuf[2], tmpbuf[3], tmpbuf[4], tmpbuf[5], tmpbuf[6], tmpbuf[7], tmpbuf[8], tmpbuf[9], tmpbuf[10], tmpbuf[11], tmpbuf[12], tmpbuf[13], tmpbuf[14], data_len, pgs_pts, pgs_pts_end);
             data = malloc(data_len);
+            if (subtitle_status == SUB_STOP) {
+                if (data) {
+                    free(data);
+                    data = NULL;
+                }
+                return 0;
+            }
             if (data)
             {
                 memset(data, 0x0, data_len);
@@ -922,6 +941,15 @@ aml_soft_demux:
                 LOGI("pgs_packet_length is %d, %x,\n",
                      pgs_packet_length, buf);
                 subtitle_pgs.showdata.pts = pgs_dts;
+                if (subtitle_status == SUB_STOP)
+                {
+                    pgs_ret = 0;
+                    if (buf) {
+                        free(buf);
+                        buf = NULL;
+                    }
+                    goto pgs_decode_end;
+                }
                 if (buf)
                 {
                     LOGI("## 555 get_pgs_spu ------------\n");
