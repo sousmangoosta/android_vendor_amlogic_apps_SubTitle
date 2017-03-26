@@ -20,12 +20,14 @@
 #include <android/log.h>
 #include "amstream.h"
 
-#include "sub_control.h"
+//#include "sub_control.h"
 #include "sub_subtitle.h"
 #include "sub_vob_sub.h"
 #include "sub_dvb_sub.h"
 #include "sub_pgs_sub.h"
 #include "sub_set_sys.h"
+
+#include "sub_io.h"
 
 typedef struct _DivXSubPictColor
 {
@@ -342,23 +344,25 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
     }
     if (read_sub_fd < 0)
         return 0;
-    ret = subtitle_poll_sub_fd(read_sub_fd, 10);
-    if (ret == 0)
-    {
-        //LOGI("codec_poll_sub_fd fail \n\n");
-        ret = -1;
-        goto error;
+
+    if (getIOType() == IO_TYPE_DEV) {
+        ret = pollFd(read_sub_fd, 10);
+        if (ret == 0) {
+            //LOGI("codec_poll_sub_fd fail \n\n");
+            ret = -1;
+            goto error;
+        }
     }
+
     if (get_subtitle_enable() == 0)
     {
-        size = subtitle_get_sub_size_fd(read_sub_fd);
+        size = getSize(read_sub_fd);
         if (size > 0)
         {
             char *buff = malloc(size);
             if (buff)
             {
-                subtitle_read_sub_data_fd(read_sub_fd, buff,
-                                          size);
+                getData(read_sub_fd, buff, size);
                 free(buff);
             }
         }
@@ -369,17 +373,17 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
     {
         //pgs subtitle
         sublen = 50;
-        size = subtitle_get_sub_size_fd(read_sub_fd);
+        size = getSize(read_sub_fd);
         LOGI("start pgs sub buffer size %d\n", size);
         int ret_spu = get_pgs_spu(spu, read_sub_fd);
-        size = subtitle_get_sub_size_fd(read_sub_fd);
+        size = getSize(read_sub_fd);
         LOGI("end pgs sub buffer size %d\n", size);
         return 0;
     }
     else if (get_subtitle_subtype() == 5)
     {
         sublen = 50;
-        size = subtitle_get_sub_size_fd(read_sub_fd);
+        size = getSize(read_sub_fd);
         LOGI("start dvb sub buffer size %d\n", size);
         int ret_spu = get_dvb_spu(spu, read_sub_fd);
         if (ret_spu == -1)
@@ -389,11 +393,11 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
             subtitle_status = SUB_INIT;
             restlen = 0;
         }
-        size = subtitle_get_sub_size_fd(read_sub_fd);
+        size = getSize(read_sub_fd);
         LOGI("end dvb buffer size %d\n", size);
         return 0;
     }
-    size = subtitle_get_sub_size_fd(read_sub_fd);
+    size = getSize(read_sub_fd);
     if (size <= 0)
     {
         ret = -1;
@@ -430,10 +434,7 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
         }
         else
         {
-            ret =
-                subtitle_read_sub_data_fd(read_sub_fd,
-                                          spu_buf_piece + restlen,
-                                          16);
+            getData(read_sub_fd, spu_buf_piece + restlen, 16);
             sizeflag -= 16;
             spu_buf_tmp += 16;
         }
@@ -442,17 +443,16 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
                 || (spu_buf_piece[rd_oft++] != 0x4d)
                 || (spu_buf_piece[rd_oft++] != 0x4c)
                 || (spu_buf_piece[rd_oft++] != 0x55)
-                || ((spu_buf_piece[rd_oft++] & 0xfe) != 0xaa))
+                /*|| ((spu_buf_piece[rd_oft++] & 0xfe) != 0xaa)*/)
         {
             LOGI("\n wrong subtitle header :%x %x %x %x    %x %x %x %x    %x %x %x %x \n", spu_buf_piece[0], spu_buf_piece[1], spu_buf_piece[2], spu_buf_piece[3], spu_buf_piece[4], spu_buf_piece[5], spu_buf_piece[6], spu_buf_piece[7], spu_buf_piece[8], spu_buf_piece[9], spu_buf_piece[10], spu_buf_piece[11]);
-            ret =
-                subtitle_read_sub_data_fd(read_sub_fd,
-                                          spu_buf_piece, sizeflag);
+            getData(read_sub_fd, spu_buf_piece, sizeflag);
             sizeflag = 0;
             LOGI("\n\n ******* find wrong subtitle header!! ******\n\n");
             ret = -1;
             goto error; // wrong head
         }
+        rd_oft++;//0xaa or 0x77
         LOGI("\n\n ******* find correct subtitle header ******\n\n");
         current_type = spu_buf_piece[rd_oft++] << 16;
         current_type |= spu_buf_piece[rd_oft++] << 8;
@@ -469,20 +469,14 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
         if (current_length > sizeflag)
         {
             LOGI("current_length > size");
-            ret =
-                subtitle_read_sub_data_fd(read_sub_fd,
-                                          spu_buf_piece, sizeflag);
+            getData(read_sub_fd, spu_buf_piece, sizeflag);
             sizeflag = 0;
             ret = -1;
             goto error;
         }
         if (current_type == 0x17000 || current_type == 0x1700a)
         {
-            //          ret = subtitle_read_sub_data_fd(read_sub_fd, spu_buf_piece+16, current_length);
-            ret =
-                subtitle_read_sub_data_fd(read_sub_fd,
-                                          spu_buf_piece + restlen +
-                                          16, sizeflag - restlen);
+            getData(read_sub_fd, spu_buf_piece + restlen + 16, sizeflag - restlen);
             restlen = sizeflag;
             sizeflag = 0;
             spu_buf_tmp += current_length;
@@ -490,10 +484,7 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
         }
         else
         {
-            ret =
-                subtitle_read_sub_data_fd(read_sub_fd,
-                                          spu_buf_piece + 16,
-                                          current_length + 4);
+            getData(read_sub_fd, spu_buf_piece + 16, current_length + 4);
             sizeflag -= (current_length + 4);
             spu_buf_tmp += (current_length + 4);
             restlen = 0;
@@ -678,7 +669,7 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
                                 && (restbuf[1] == 0x4d)
                                 && (restbuf[2] == 0x4c)
                                 && (restbuf[3] == 0x55)
-                                && (restbuf[4] == 0xaa))
+                                && ((restbuf[4] == 0xaa) || (restbuf[4] == 0x77)))
                         {
                             LOGI("## sub header found ! restbuf=%x,%x, ---\n", restbuf, restbuf[0]);
                             sizeflag = restlen;
@@ -1001,7 +992,7 @@ int get_inter_sub_type()
 
 int get_subtitle_buffer_size()
 {
-    return subtitle_get_sub_size_fd(aml_sub_handle);
+    return getSize(aml_sub_handle);
 }
 
 int get_inter_spu_size()
@@ -1448,6 +1439,7 @@ int close_subtitle()
     }
     LOGI("start to close subtitle \n");
     lp_lock(&sublock);
+    //resetSocketBuffer();
     dvbsub_close_decoder();
     close_pgs_subtitle();
     if (restbuf)

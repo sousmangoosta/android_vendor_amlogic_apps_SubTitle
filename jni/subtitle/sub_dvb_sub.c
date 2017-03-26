@@ -9,6 +9,7 @@
 
 #include "sub_dvb_sub.h"
 #include "sub_subtitle.h"
+#include "sub_io.h"
 
 static unsigned SPU_RD_HOLD_SIZE = 0x20;
 #define OSD_HALF_SIZE (1920*1280/8)
@@ -1851,14 +1852,14 @@ static int read_spu_buf(int read_handle, char *buf, int len)
     LOGI("read_spu_buf len = %d\n", len);
     if (len > 3 * 1024 * 1024)
         abort();
-    subtitle_read_sub_data_fd(read_handle, buf, len);
+    getData(read_handle, buf, len);
     return len;
 }
 
 /* check subtitle hw buffer has enough data to read */
 static int check_sub_buffer_length(int read_handle, int size)
 {
-    int ret = subtitle_get_sub_size_fd(read_handle);
+    int ret = getSize(read_handle);
     LOGI("[check_sub_buffer_length]read_handle:%d, size:%d, sub buffer level = %d \n", read_handle, size, ret);
     if (ret >= size)
         return 1;
@@ -1883,10 +1884,9 @@ int get_dvb_spu(AML_SPUVAR *spu, int read_handle)
         dvb_packet_length = dvb_pes_header_length = 0;
         packet_header = 0;
         skip_packet_flag = 0;
-        if ((subtitle_get_sub_size_fd(read_handle)) < SPU_RD_HOLD_SIZE)
+        if (getSize(read_handle) < SPU_RD_HOLD_SIZE)
         {
-            LOGI("current dvb sub buffer size %d\n",
-                 (subtitle_get_sub_size_fd(read_handle)));
+            LOGI("current dvb sub buffer size %d\n", getSize(read_handle));
             break;
         }
         while (read_spu_buf(read_handle, tmpbuf, 1) == 1)
@@ -1898,8 +1898,7 @@ int get_dvb_spu(AML_SPUVAR *spu, int read_handle)
                 LOGI("## 222  get_dvb_spu hardware demux dvb %x,%llx,-----------\n", tmpbuf[0], packet_header & 0xffffffffff);
                 break;
             }
-            else if ((packet_header & 0xffffffffff) ==
-                     0x414d4c55aa)
+            else if ((packet_header & 0xffffffffff) == 0x414d4c5577 || (packet_header & 0xffffffffff) == 0x414d4c55aa)
             {
                 LOGI("## 222  get_dvb_spu soft demux dvb %x,%llx,-----------\n", tmpbuf[0], packet_header & 0xffffffffff);
                 goto aml_soft_demux;
@@ -2154,7 +2153,7 @@ int get_dvb_spu(AML_SPUVAR *spu, int read_handle)
         }
     }
 aml_soft_demux:
-    if ((packet_header & 0xffffffffff) == 0x414d4c55aa)
+    if ((packet_header & 0xffffffffff) == 0x414d4c5577 || (packet_header & 0xffffffffff) == 0x414d4c55aa)
     {
         int data_len = 0;
         char *data = NULL;

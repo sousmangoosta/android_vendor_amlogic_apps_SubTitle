@@ -13,7 +13,9 @@
 #include "sub_subtitle.h"
 #include "sub_pgs_sub.h"
 #include "vob_sub.h"
-#include "sub_control.h"
+//#include "sub_control.h"
+
+#include "sub_io.h"
 
 #define  LOG_TAG    "sub_pgs"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
@@ -60,16 +62,14 @@ static int read_spu_byte(int read_handle, char *byte)
     }
     else
     {
-        if ((subtitle_get_sub_size_fd(read_handle)) < SPU_RD_HOLD_SIZE)
+        if (getSize(read_handle) < SPU_RD_HOLD_SIZE)
         {
-            LOGI("current pgs sub buffer size %d\n",
-                 (subtitle_get_sub_size_fd(read_handle)));
+            LOGI("current pgs sub buffer size %d\n", getSize(read_handle));
             ret = 0;
         }
         else
         {
-            subtitle_read_sub_data_fd(read_handle,
-                                      &(uVobSPU.spu_cache[0]), 8);
+            getData(read_handle, &(uVobSPU.spu_cache[0]), 8);
             int i = 0;
             for (i = 0; i < 4; i++)
             {
@@ -96,7 +96,7 @@ static int read_spu_buf(int read_handle, char *buf, int len)
             break;
     }
 #endif
-    subtitle_read_sub_data_fd(read_handle, buf, len);
+    getData(read_handle, buf, len);
     read_pgs_byte += len;
     return len;
 }
@@ -557,10 +557,9 @@ DECODE_START:
         pgs_packet_length = pgs_pes_header_length = 0;
         packet_header = 0;
         skip_packet_flag = 0;
-        if ((subtitle_get_sub_size_fd(read_handle)) < SPU_RD_HOLD_SIZE)
+        if (getSize(read_handle) < SPU_RD_HOLD_SIZE)
         {
-            LOGI("current pgs sub buffer size %d\n",
-                 (subtitle_get_sub_size_fd(read_handle)));
+            LOGI("current pgs sub buffer size %d\n", getSize(read_handle));
             break;
         }
         uVobSPU.spu_cache_pos = 0;
@@ -577,8 +576,7 @@ DECODE_START:
                 LOGI("## 222  get_pgs_spu hardware demux pgs %x,%llx,-----------\n", tmpbuf[0], packet_header & 0xffffffffff);
                 break;
             }
-            else if ((packet_header & 0xffffffffff) ==
-                     0x414d4c55aa)
+            else if ((packet_header & 0xffffffffff) == 0x414d4c5577 || (packet_header & 0xffffffffff) == 0x414d4c55aa)
             {
                 LOGI("## 222  get_pgs_spu soft demux pgs %x,%llx,-----------\n", tmpbuf[0], packet_header & 0xffffffffff);
                 goto aml_soft_demux;
@@ -799,8 +797,7 @@ DECODE_START:
                     LOGI("pgs_packet_length is %d\n",
                          pgs_packet_length);
                     subtitle_pgs.showdata.pts = pgs_dts;
-                    if (subtitle_get_sub_size_fd
-                            (read_handle) < pgs_packet_length ||
+                    if (getSize(read_handle) < pgs_packet_length ||
                             subtitle_status == SUB_STOP)
                     {
                         pgs_ret = 0;
@@ -852,7 +849,7 @@ DECODE_START:
         }
     }
 aml_soft_demux:
-    if ((packet_header & 0xffffffffff) == 0x414d4c55aa)
+    if ((packet_header & 0xffffffffff) == 0x414d4c5577 || (packet_header & 0xffffffffff) == 0x414d4c55aa)
     {
         int read_data_len = 0, data_len = 0;
         int pgs_packet_type = 0;

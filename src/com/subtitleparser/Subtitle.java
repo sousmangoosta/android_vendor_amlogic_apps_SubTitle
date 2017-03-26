@@ -146,6 +146,18 @@ public class Subtitle {
             stopSubThreadByJni();
         }
 
+        public void startSocketServer() {
+            startSubServerByJni();
+        }
+
+        public void stopSocketServer() {
+            stopSubServerByJni();
+        }
+
+        public void setIOType(int type) {
+            setIOTypeByJni(type);
+        }
+
         public void resetForSeek() {
             resetForSeekByjni();
         }
@@ -154,8 +166,9 @@ public class Subtitle {
         native void startSubThreadByJni();
         native void stopSubThreadByJni();
         native void resetForSeekByjni();
-
-
+        native void startSubServerByJni();
+        native void stopSubServerByJni();
+        native void setIOTypeByJni(int type);
 
         /**
          * Parse a known type subtitle file into a SubtitleFile object.

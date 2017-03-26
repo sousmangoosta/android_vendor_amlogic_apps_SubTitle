@@ -47,6 +47,24 @@ public class SubManager {
             }
         }
 
+        public void startSocketServer() {
+            if (subtitle != null) {
+                subtitle.startSocketServer();
+            }
+        }
+
+        public void stopSocketServer() {
+            if (subtitle != null) {
+                subtitle.stopSocketServer();
+            }
+        }
+
+        public void setIOType(int type) {
+            if (subtitle != null) {
+                subtitle.setIOType(type);
+            }
+        }
+
         public void loadSubtitleFile (String path, String enc) throws Exception {
             if (subapi != null) {
                 if (subapi.type() == Subtitle.SUBTYPE.INSUB) {
