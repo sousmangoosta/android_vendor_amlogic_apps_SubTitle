@@ -37,7 +37,7 @@ int subtitle_get_sub_size_fd(int sub_fd)
         return sub_size;
 }
 
-int subtitle_read_sub_data_fd(int sub_fd, char *buf, unsigned int length)
+int subtitle_read_sub_data_fd(int sub_fd, char *buf, int length)
 {
     int data_size = length, r, read_done = 0;
     while (data_size)

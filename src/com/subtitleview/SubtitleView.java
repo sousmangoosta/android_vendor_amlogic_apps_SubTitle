@@ -565,6 +565,18 @@ public class SubtitleView extends FrameLayout {
             SubManager.getinstance().stopSubThread();
         }
 
+        public void startSocketServer() {
+            SubManager.getinstance().startSocketServer();
+        }
+
+        public void stopSocketServer() {
+            SubManager.getinstance().stopSocketServer();
+        }
+
+        public void setIOType(int type) {
+            SubManager.getinstance().setIOType(type);
+        }
+
         public void loadSubtitleFile (String path, String enc) throws Exception {
             SubManager.getinstance().loadSubtitleFile (path, enc);
         }

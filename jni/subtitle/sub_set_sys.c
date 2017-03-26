@@ -11,6 +11,7 @@
 #include "linux/ioctl.h"
 #include "amstream.h"
 #include <Amsysfsutils.h>
+#include "sub_io.h"
 
 #define CODEC_AMSUBTITLE_DEVICE     "/dev/amsubtitle"
 
@@ -46,7 +47,16 @@ int get_subtitle_enable()
 
 int get_subtitle_num()
 {
-    return get_sysfs_int("/sys/class/subtitle/total");
+    int ret = 0;
+
+    if (getIOType() == IO_TYPE_DEV) {
+        ret = get_sysfs_int("/sys/class/subtitle/total");
+    }
+    else if (getIOType() == IO_TYPE_SOCKET) {
+        ret = getInfo(TYPE_TOTAL);
+    }
+
+    return ret;
 }
 
 int get_subtitle_language(char *valstr, int size)
@@ -92,7 +102,16 @@ int get_subtitle_data()
 
 int get_subtitle_startpts()
 {
-    return get_sysfs_int("/sys/class/subtitle/startpts");
+    int ret = 0;
+
+    if (getIOType() == IO_TYPE_DEV) {
+        ret = get_sysfs_int("/sys/class/subtitle/startpts");
+    }
+    else if (getIOType() == IO_TYPE_SOCKET) {
+        ret = getInfo(TYPE_STARTPTS);
+    }
+
+    return ret;
 }
 
 int get_subtitle_fps()
@@ -102,5 +121,14 @@ int get_subtitle_fps()
 
 int get_subtitle_subtype()
 {
-    return get_sysfs_int("/sys/class/subtitle/subtype");
+    int ret = 0;
+
+    if (getIOType() == IO_TYPE_DEV) {
+        ret = get_sysfs_int("/sys/class/subtitle/subtype");
+    }
+    else if (getIOType() == IO_TYPE_SOCKET) {
+        ret = getInfo(TYPE_SUBTYPE);
+    }
+
+    return ret;
 }

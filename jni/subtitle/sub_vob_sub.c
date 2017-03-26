@@ -288,11 +288,12 @@ int get_vob_spu(char *spu_buf, int *bufsize, unsigned length, AML_SPUVAR *spu)
                     || (spu_buf[rd_oft++] != 0x4d)
                     || (spu_buf[rd_oft++] != 0x4c)
                     || (spu_buf[rd_oft++] != 0x55)
-                    || (spu_buf[rd_oft++] != 0xaa))
+                    /*|| (spu_buf[rd_oft++] != 0xaa)*/)
             {
                 LOGI("## goto error ---------\n");
                 goto error; // wrong head
             }
+            rd_oft++;//0xaa or 0x77
             rd_oft += 3;    // 3 bytes for type
             current_length = spu_buf[rd_oft++] << 24;
             current_length |= spu_buf[rd_oft++] << 16;

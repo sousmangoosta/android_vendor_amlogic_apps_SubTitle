@@ -14,6 +14,7 @@
 #include "sub_subtitle.h"
 #include "sub_set_sys.h"
 #include "vob_sub.h"
+#include "sub_io.h"
 
 #define  LOG_TAG    "sub_jni"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
@@ -644,6 +645,24 @@ JNIEXPORT void JNICALL startSubThread(JNIEnv *env, jclass cl)
     }
 }
 
+JNIEXPORT void JNICALL startSubServer(JNIEnv *env, jclass cl)
+{
+    LOGI("start tcpserver");
+    startSocketServer();
+}
+
+JNIEXPORT void JNICALL stopSubServer(JNIEnv *env, jclass cl)
+{
+    LOGI("stop tcpserver");
+    stopSocketServer();
+}
+
+JNIEXPORT void JNICALL setSubIOType(JNIEnv *env, jclass cl, jint type)
+{
+    LOGI("setIOType");
+    setIOType(type);
+}
+
 JNIEXPORT void JNICALL stopSubThread(JNIEnv *env, jclass cl)
 {
     if (subThreadRunning == 1)
@@ -669,6 +688,9 @@ static JNINativeMethod gMethods[] =
     {"startSubThreadByJni", "()V", (void *)startSubThread},
     {"stopSubThreadByJni", "()V", (void *)stopSubThread},
     { "resetForSeekByjni", "()V",(void*) resetForSeek},
+    { "startSubServerByJni", "()V",(void*) startSubServer},
+    { "stopSubServerByJni", "()V",(void*) stopSubServer},
+    { "setIOTypeByJni", "(I)V",(void*) setSubIOType},
 };
 
 static JNINativeMethod insubMethods[] =

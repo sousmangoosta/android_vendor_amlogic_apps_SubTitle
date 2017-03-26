@@ -64,6 +64,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     private static final int CLEAR = 0xFB;
     private static final int RESET_FOR_SEEK = 0xFC;
     private static final int LOAD = 0xFD;
+    private static final int SET_IO_TYPE = 0xFE;
     private static final int SUB_OFF = 0;
     private static final int SUB_ON = 1;
     private int subShowState = SUB_OFF;
@@ -118,6 +119,12 @@ public class SubTitleService extends ISubTitleService.Stub {
         subTitleView.setTextSize(20);
         subTitleView.setTextStyle(Typeface.NORMAL);
         subTitleView.setViewStatus(true);
+
+        new Thread(new Runnable() {
+            public void run() {
+                subTitleView.startSocketServer();
+            }
+        }).start();
 
         //prepare window
         mWindowManager = (WindowManager)mContext.getSystemService (Context.WINDOW_SERVICE);
@@ -189,6 +196,13 @@ public class SubTitleService extends ISubTitleService.Stub {
             mSubtitleUtils.setSubtitleNumber(0);
             mSubtitleUtils = null;
         }
+
+        new Thread(new Runnable() {
+            public void run() {
+                subTitleView.stopSocketServer();
+            }
+        }).start();
+
         mSubTotal = -1;
         mSetSubId = -1;
         sendCloseMsg();
@@ -293,6 +307,10 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     public void resetForSeek() {
         sendResetForSeekMsg();
+    }
+
+    public void setIOType(int type) {
+        sendSetIOTypeMsg(type);
     }
 
     public void option() {
@@ -449,6 +467,12 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     private void sendResetForSeekMsg() {
         Message msg = mHandler.obtainMessage(RESET_FOR_SEEK);
+        mHandler.sendMessage(msg);
+    }
+
+    private void sendSetIOTypeMsg(int type) {
+        Message msg = mHandler.obtainMessage(SET_IO_TYPE);
+        msg.arg1 = type;
         mHandler.sendMessage(msg);
     }
 
@@ -797,6 +821,10 @@ public class SubTitleService extends ISubTitleService.Stub {
                         Log.e(TAG, "load:error");
                         e.printStackTrace();
                     }
+                    break;
+
+                case SET_IO_TYPE:
+                    subTitleView.setIOType(msg.arg1);
                     break;
 
                 default:
