@@ -65,6 +65,14 @@ public class SubManager {
             }
         }
 
+        public String getPcrscr() {
+            String ret = null;
+            if (subtitle != null) {
+                ret = subtitle.getPcrscr();
+            }
+            return ret;
+        }
+
         public void loadSubtitleFile (String path, String enc) throws Exception {
             if (subapi != null) {
                 if (subapi.type() == Subtitle.SUBTYPE.INSUB) {

@@ -577,6 +577,10 @@ public class SubtitleView extends FrameLayout {
             SubManager.getinstance().setIOType(type);
         }
 
+        public String getPcrscr() {
+            return SubManager.getinstance().getPcrscr();
+        }
+
         public void loadSubtitleFile (String path, String enc) throws Exception {
             SubManager.getinstance().loadSubtitleFile (path, enc);
         }

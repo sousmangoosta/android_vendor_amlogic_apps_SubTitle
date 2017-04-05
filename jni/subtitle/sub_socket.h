@@ -23,6 +23,7 @@ static char *mRPtr;
 static char *mWPtr;
 static int mTotal;
 static int mType;
+static int64_t mTimeUs;
 static int64_t mStartPts;
 static int64_t mSize;
 
@@ -42,6 +43,7 @@ int getSizeBySkt();
 void getDataBySkt(char *buf, int size);
 int getInfoBySkt(int type);
 void resetSocketBuffer();
+void getPcrscrBySkt(char* pcrStr);
 
 #ifdef  __cplusplus
 }

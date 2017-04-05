@@ -663,6 +663,16 @@ JNIEXPORT void JNICALL setSubIOType(JNIEnv *env, jclass cl, jint type)
     setIOType(type);
 }
 
+JNIEXPORT jstring JNICALL getSubPcrscr(JNIEnv *env, jclass cl)
+{
+    LOGI("getPcrscr");
+    jstring jstr;
+    char pcrStr[1024] = { 0 };
+    getPcrscr(pcrStr);
+    jstr = string2jstring(env, pcrStr);
+    return jstr;
+}
+
 JNIEXPORT void JNICALL stopSubThread(JNIEnv *env, jclass cl)
 {
     if (subThreadRunning == 1)
@@ -691,6 +701,7 @@ static JNINativeMethod gMethods[] =
     { "startSubServerByJni", "()V",(void*) startSubServer},
     { "stopSubServerByJni", "()V",(void*) stopSubServer},
     { "setIOTypeByJni", "(I)V",(void*) setSubIOType},
+    { "getPcrscrByJni", "()Ljava/lang/String;",(void*) getSubPcrscr},
 };
 
 static JNINativeMethod insubMethods[] =

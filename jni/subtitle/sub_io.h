@@ -30,6 +30,7 @@ int getSize(int sub_fd);
 void getData(int sub_fd, char *buf, int size);
 void setIOType(IOType type);
 IOType getIOType();
+void getPcrscr(char* pcrStr);
 
 #ifdef  __cplusplus
 }

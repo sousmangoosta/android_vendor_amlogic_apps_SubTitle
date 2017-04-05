@@ -313,6 +313,10 @@ public class SubTitleService extends ISubTitleService.Stub {
         sendSetIOTypeMsg(type);
     }
 
+    public String getPcrscr() {
+        return subTitleView.getPcrscr();
+    }
+
     public void option() {
         sendOptionMsg();
     }
