@@ -3,7 +3,6 @@
     android:id="@+id/sub"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-
     <com.subtitleview.SubtitleView
         android:id="@+id/subtitle"
         android:layout_height="wrap_content"
@@ -12,4 +11,11 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="50dp">
     </com.subtitleview.SubtitleView>
+    <com.subtitleview.CcSubView
+        android:id="@+id/ccsubtitle"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/subtitle">
+    </com.subtitleview.CcSubView>
 </RelativeLayout>

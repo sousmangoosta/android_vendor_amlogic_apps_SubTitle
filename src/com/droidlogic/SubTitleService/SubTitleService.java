@@ -13,6 +13,7 @@ import android.os.IBinder;
 import java.lang.ref.WeakReference;
 import android.view.*;
 import android.view.ViewGroup;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -21,6 +22,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.graphics.*;
 import com.subtitleparser.*;
 import com.subtitleview.SubtitleView;
+import com.subtitleview.CcSubView;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -64,7 +66,11 @@ public class SubTitleService extends ISubTitleService.Stub {
     private static final int CLEAR = 0xFB;
     private static final int RESET_FOR_SEEK = 0xFC;
     private static final int LOAD = 0xFD;
+
     private static final int SET_IO_TYPE = 0xFE;
+    private static final int CCSTART = 0xE1;
+    private static final int CCSTOP = 0xE2;
+
     private static final int SUB_OFF = 0;
     private static final int SUB_ON = 1;
     private int subShowState = SUB_OFF;
@@ -97,6 +103,9 @@ public class SubTitleService extends ISubTitleService.Stub {
     private int mTextSize = 20;
     private int mBottomMargin = 50; //should sync with SubtitleView.xml
 
+    //ccsubtitleview
+    private CcSubView ccSubView = null;
+
     public SubTitleService(Context context) {
         LOGI("[SubTitleService]");
         mContext = context;
@@ -119,6 +128,7 @@ public class SubTitleService extends ISubTitleService.Stub {
         subTitleView.setTextSize(20);
         subTitleView.setTextStyle(Typeface.NORMAL);
         subTitleView.setViewStatus(true);
+        ccSubView = (CcSubView) mSubView.findViewById(R.id.ccsubtitle);
 
         new Thread(new Runnable() {
             public void run() {
@@ -164,7 +174,7 @@ public class SubTitleService extends ISubTitleService.Stub {
         if (mOptionDialog != null) {
             mOptionDialog.dismiss();
         }
-
+        StartCcSub();
         if (path != null && !path.equals("")) {
             File file = new File(path);
             String name = file.getName();
@@ -205,6 +215,9 @@ public class SubTitleService extends ISubTitleService.Stub {
 
         mSubTotal = -1;
         mSetSubId = -1;
+        if (isViewAdded) {
+            StopCcSub();
+        }
         sendCloseMsg();
     }
 
@@ -381,6 +394,39 @@ public class SubTitleService extends ISubTitleService.Stub {
         }
         LOGI("[getSubLanguage] idx:" + idx + ",language:" + language);
         return language;
+    }
+
+    public void StartCcSub() {
+        sendStartCcSubMsg();
+    }
+
+    public void StopCcSub() {
+        sendStopCcSubMsg();
+    }
+
+    private void sendStartCcSubMsg() {
+        Message msg = mHandler.obtainMessage(CCSTART);
+        mHandler.sendMessage(msg);
+    }
+
+    private void sendStopCcSubMsg() {
+        Message msg = mHandler.obtainMessage(CCSTOP);
+        mHandler.sendMessage(msg);
+    }
+
+    private void ccStart() {
+        LOGI("cc subtitle start");
+        ccSubView.startCC();
+        ccSubView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        ccSubView.show();
+        ccSubView.setActive(true);
+    }
+
+    private void ccStop() {
+        LOGI("cc subtitle stop");
+        ccSubView.hide();
+        ccSubView.setActive(false);
+        ccSubView.stopCC();
     }
 
     private void sendOpenMsg(int idx) {
@@ -784,6 +830,7 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.setVisibility (View.GONE);
                         subShowState = SUB_OFF;
                     }
+                    ccSubView.hide();
                     break;
 
                 case DISPLAY:
@@ -791,6 +838,7 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.setVisibility (View.VISIBLE);
                         subShowState = SUB_ON;
                     }
+                    ccSubView.show();
                     break;
 
                 case CLEAR:
@@ -825,6 +873,15 @@ public class SubTitleService extends ISubTitleService.Stub {
 
                 case SET_IO_TYPE:
                     subTitleView.setIOType(msg.arg1);
+
+                case CCSTART:
+                    addView();
+                    ccStart();
+                    break;
+
+               case CCSTOP:
+                    ccStop();
+                    removeView();
                     break;
 
                 default:

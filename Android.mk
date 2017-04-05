@@ -24,7 +24,7 @@ LOCAL_PROGUARD_ENABLED := disabled
 LOCAL_PACKAGE_NAME := SubTitle
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := droidlogic
-LOCAL_REQUIRED_MODULES := libsubjni
+LOCAL_REQUIRED_MODULES := libsubjni libccsubjni
 
 include $(BUILD_PACKAGE)
 include $(call all-makefiles-under,$(LOCAL_PATH))
