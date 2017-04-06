@@ -84,3 +84,7 @@ void setIOType(IOType type) {
 IOType getIOType() {
     return mIOType;
 }
+
+void getPcrscr(char* pcrStr) {
+    getPcrscrBySkt(pcrStr);
+}

@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include<pthread.h>
+#include <inttypes.h>
 
 #include "sub_socket.h"
 
@@ -217,7 +218,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            ALOGI("child recv, mStartPts:%d\n", mStartPts);
+            ALOGI("child recv, mStartPts:%" PRId64 "\n", mStartPts);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x54
@@ -229,6 +230,16 @@ void child_connect(int sockfd) {
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
             ALOGI("child recv, mType:%d\n", mType);
+        }
+        else if (recvBuf[0] == 0x53
+            && recvBuf[1] == 0x52
+            && recvBuf[2] == 0x44
+            && recvBuf[3] == 0x54) {//SRDT //subtitle render time
+            mTimeUs = (recvBuf[4] << 24)
+                    | (recvBuf[5] << 16)
+                    | (recvBuf[6] << 8)
+                    | recvBuf[7];
+            ALOGI("child recv, mTimeUs:%d\n", mTimeUs);
         }
         else/* if (recvBuf[0] == 'A' && recvBuf[1] == 'M' && recvBuf[2] == 'L') */{
             safeCopy(mLoopBuf, recvBuf, retLen);
@@ -300,4 +311,11 @@ int getInfoBySkt(int type) {
     }
     //ALOGI("[getInfo]type:%d, ret:%d\n", type, ret);
     return ret;
+}
+
+void getPcrscrBySkt(char* pcrStr) {
+    int64_t pcr = mTimeUs/1000*90 + mStartPts;
+    sprintf(pcrStr, "0x%x", pcr);
+
+    //ALOGI("[getPcrscr]pcr:%x, pcrStr:%s\n",pcr, pcrStr);
 }

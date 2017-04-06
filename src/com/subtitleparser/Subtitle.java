@@ -158,6 +158,10 @@ public class Subtitle {
             setIOTypeByJni(type);
         }
 
+        public String getPcrscr() {
+            return getPcrscrByJni();
+        }
+
         public void resetForSeek() {
             resetForSeekByjni();
         }
@@ -169,6 +173,7 @@ public class Subtitle {
         native void startSubServerByJni();
         native void stopSubServerByJni();
         native void setIOTypeByJni(int type);
+        native String getPcrscrByJni();
 
         /**
          * Parse a known type subtitle file into a SubtitleFile object.

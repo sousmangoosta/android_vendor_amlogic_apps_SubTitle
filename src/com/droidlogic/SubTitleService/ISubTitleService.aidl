@@ -33,4 +33,5 @@ interface ISubTitleService
     boolean load(String path);
     void setSurfaceViewParam(int x, int y, int w, int h);
     void setIOType(int type);
+    String getPcrscr();
 }
