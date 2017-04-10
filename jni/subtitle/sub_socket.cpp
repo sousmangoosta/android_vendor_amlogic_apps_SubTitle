@@ -207,7 +207,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            ALOGI("child recv, mTotal:%d\n", mTotal);
+            //ALOGI("child recv, mTotal:%d\n", mTotal);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x50
@@ -218,7 +218,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            ALOGI("child recv, mStartPts:%" PRId64 "\n", mStartPts);
+            //ALOGI("child recv, mStartPts:%" PRId64 "\n", mStartPts);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x54
@@ -229,7 +229,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            ALOGI("child recv, mType:%d\n", mType);
+            //ALOGI("child recv, mType:%d\n", mType);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x52
@@ -239,7 +239,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            ALOGI("child recv, mTimeUs:%d\n", mTimeUs);
+            //ALOGI("child recv, mTimeUs:%d\n", mTimeUs);
         }
         else/* if (recvBuf[0] == 'A' && recvBuf[1] == 'M' && recvBuf[2] == 'L') */{
             safeCopy(mLoopBuf, recvBuf, retLen);
