@@ -13,6 +13,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := ccsub.cpp
 LOCAL_ARM_MODE := arm
 LOCAL_C_INCLUDES := external/libzvbi/src \
+    vendor/amlogic/external/libzvbi/src \
     $(DVB_PATH)/include/am_mw \
     $(DVB_PATH)/include/am_adp \
     bionic/libc/include \
