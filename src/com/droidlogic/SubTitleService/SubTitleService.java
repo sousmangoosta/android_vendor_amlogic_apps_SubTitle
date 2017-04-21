@@ -156,8 +156,10 @@ public class SubTitleService extends ISubTitleService.Stub {
     private void addView() {
         LOGI("[addView]isViewAdded:" + isViewAdded);
         if (!isViewAdded) {
-            mWindowManager.addView(mSubView, mWindowLayoutParams);
-            isViewAdded = true;
+            if (SystemProperties.getBoolean("sys.subtitleservice.enableview", true)) {
+                mWindowManager.addView(mSubView, mWindowLayoutParams);
+                isViewAdded = true;
+            }
         }
     }
 
