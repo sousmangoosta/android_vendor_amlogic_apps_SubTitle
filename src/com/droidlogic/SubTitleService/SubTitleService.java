@@ -105,6 +105,7 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     //ccsubtitleview
     private CcSubView ccSubView = null;
+    private boolean isccrunning = false;
 
     public SubTitleService(Context context) {
         LOGI("[SubTitleService]");
@@ -204,6 +205,7 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     public void close() {
         LOGI("[close]");
+        StopCcSub();
         if (mSubtitleUtils != null) {
             mSubtitleUtils.setSubtitleNumber(0);
             mSubtitleUtils = null;
@@ -217,9 +219,6 @@ public class SubTitleService extends ISubTitleService.Stub {
 
         mSubTotal = -1;
         mSetSubId = -1;
-        if (isViewAdded) {
-            StopCcSub();
-        }
         sendCloseMsg();
     }
 
@@ -421,18 +420,24 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     private void ccStart() {
-        LOGI("cc subtitle start");
-        ccSubView.startCC();
-        ccSubView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        ccSubView.show();
-        ccSubView.setActive(true);
+        if (!isccrunning) {
+            LOGI("cc subtitle start");
+            ccSubView.startCC();
+            ccSubView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            ccSubView.show();
+            ccSubView.setActive(true);
+            isccrunning = true;
+        }
     }
 
     private void ccStop() {
-        LOGI("cc subtitle stop");
-        ccSubView.hide();
-        ccSubView.setActive(false);
-        ccSubView.stopCC();
+        if (isccrunning) {
+            LOGI("cc subtitle stop");
+            isccrunning = false;
+            ccSubView.hide();
+            ccSubView.setActive(false);
+            ccSubView.stopCC();
+        }
     }
 
     private void sendOpenMsg(int idx) {
