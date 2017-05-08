@@ -42,6 +42,7 @@ public class SubtitleUtils {
             "pjs",
             "aqt",
             "mpl",
+            "vtt",
             "js",
             "jss",
             /* "may be need add new types--------------" */
