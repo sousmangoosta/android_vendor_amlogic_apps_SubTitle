@@ -197,7 +197,9 @@ public class SubTitleService extends ISubTitleService.Stub {
             mSetSubId = -1;
         }
         LOGI("[open] mCurSubId: " + mCurSubId);
-        sendOpenMsg(mCurSubId);
+        if (mSubTotal > 0) {
+            sendOpenMsg(mCurSubId);
+        }
 
         //load("http://milleni.ercdn.net/9_test/double_lang_test.xml"); for test
         //sendOptionMsg();

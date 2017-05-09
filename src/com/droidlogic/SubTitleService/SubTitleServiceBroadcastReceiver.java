@@ -15,8 +15,12 @@ public class SubTitleServiceBroadcastReceiver extends BroadcastReceiver {
             String action = intent.getAction();
             Log.i (TAG, "[onReceive]action:" + action + ", subtitleService:" + subtitleService);
             if (Intent.ACTION_BOOT_COMPLETED.equals (action)) {
-                subtitleService = new SubTitleService (context);
-                ServiceManager.addService (/*Context.SUBTITLE_SERVICE*/"subtitle_service", subtitleService);
+                if (ServiceManager.getService("subtitle_service") == null) {
+                    subtitleService = new SubTitleService (context);
+                    ServiceManager.addService (/*Context.SUBTITLE_SERVICE*/"subtitle_service", subtitleService);
+                } else {
+                    Log.i (TAG, "subtitle_service is already added.");
+                }
             }
         }
 }

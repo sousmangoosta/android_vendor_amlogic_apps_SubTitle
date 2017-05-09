@@ -125,6 +125,11 @@ void* startServerThread(void* arg) {
         ALOGE("Failed to unlink old socket '%s': %s\n", addr.sun_path, strerror(errno));
         return NULL;
     }*/
+    int on = 1;
+    if ((setsockopt(mSockFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0) {
+        ALOGE("setsockopt failed.\n");
+        exit(1);
+    }
     if (bind(mSockFd,(struct sockaddr *)&addr,sizeof(addr)) == -1) {
         ALOGE("bind fail. error=%d, err:%s\n", errno, strerror(errno));
         return NULL;
