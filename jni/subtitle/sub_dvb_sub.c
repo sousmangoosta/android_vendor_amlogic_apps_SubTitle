@@ -1502,6 +1502,8 @@ static void save_display_set(DVBSubContext *ctx, AML_SPUVAR *spu)
             LOGE("save_display_set av_malloc fail, width =  %d, height = %d \n", width, height);
             return;
         }
+        memset(pbuf,0,width * height * 4);
+        memset(spu->spu_data,0,DVB_SUB_SIZE);
         //spu->spu_data = pbuf;
         spu->spu_width = width;
         spu->spu_height = height;
