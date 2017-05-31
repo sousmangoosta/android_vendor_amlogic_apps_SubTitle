@@ -21,6 +21,10 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src) \
 #LOCAL_SDK_VERSION := current
 LOCAL_PROGUARD_ENABLED := disabled
 
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+LOCAL_PROPRIETARY_MODULE := true
+endif
+
 LOCAL_PACKAGE_NAME := SubTitle
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := droidlogic
