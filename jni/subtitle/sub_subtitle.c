@@ -206,34 +206,31 @@ int get_ass_spu(char *spu_buf, unsigned length, AML_SPUVAR *spu)
     j = 0;
     for (i = 0; i < 35; i++)
     {
-        //LOGE("i=%d, %s,\n", i, spu_buf+i);
         if (strncmp(spu_buf + i, "Default", 7) == 0)
         {
             j = i;
-            i = strcspn(spu_buf + i, "\}");
-            if (*(spu_buf + j + i) == '\0')
+            unsigned char *p0 = strstr(spu_buf + i, "0000,0000,0000,,");
+            if (p0)
             {
-                // not found '\}'
-                unsigned char *p =
-                    strstr(spu_buf + i, "0000,0000,0000,,");
-                if (p)
-                {
-                    spu->buffer_size -=
-                        (p + 16 - spu->spu_data);
-                    memmove(spu->spu_data, p + 16,
-                            spu->buffer_size);
-                }
+                spu->buffer_size -= (p0 + 16 - spu->spu_data);
+                memmove(spu->spu_data, p0 + 16, spu->buffer_size);
                 break;
+            }
+
+            unsigned char *p1 = strstr(spu_buf + i, "0000,0000,0000,!Effect,");
+            if (p1)
+            {
+                spu->buffer_size -= (p1 + 23 - spu->spu_data);
+                memmove(spu->spu_data, p1 + 23, spu->buffer_size);
             }
             else
             {
                 j = j + i + 1;
-                //LOGE("i=%d, size:%u, %s,\n", i, spu->buffer_size, spu_buf+j);
                 spu->buffer_size -= j;
                 memmove(spu->spu_data, spu->spu_data + j,
-                        spu->buffer_size);
-                break;
+                spu->buffer_size);
             }
+            break;
         }
     }
     return ret;
@@ -699,6 +696,8 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
                 break;
             case 0x17002:   //mkv internel utf-8
             case 0x17004:   //mkv internel ssa
+            case 0x17808:   //mkv internel SUBRIP
+            case 0x1780d:   //mkv internel ass
                 duration_pts = spu_buf_piece[rd_oft++] << 24;
                 duration_pts |= spu_buf_piece[rd_oft++] << 16;
                 duration_pts |= spu_buf_piece[rd_oft++] << 8;
