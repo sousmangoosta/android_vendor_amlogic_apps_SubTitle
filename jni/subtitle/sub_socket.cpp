@@ -59,15 +59,17 @@ void safeCopy(char* sPtr, char* src, int size) {
     //skip case for data recover, which means write ptr is 256*1024 bigger than read ptr
     leftReg = ptrEnd - mWPtr;
     ALOGI("[safeCopy]sPtr:0x%x, mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
-    if (leftReg >= size) {
-        memcpy(mWPtr, src, size);
-        mWPtr += size;
-    }
-    else {
-        memcpy(mWPtr, src, leftReg);
-        mWPtr = sPtr;
-        memcpy(mWPtr, (src + leftReg), (size - leftReg));
-        mWPtr += (size - leftReg);
+    if (mWPtr != 0) {
+        if (leftReg >= size) {
+            memcpy(mWPtr, src, size);
+            mWPtr += size;
+        }
+        else {
+            memcpy(mWPtr, src, leftReg);
+            mWPtr = sPtr;
+            memcpy(mWPtr, (src + leftReg), (size - leftReg));
+            mWPtr += (size - leftReg);
+        }
     }
 }
 
@@ -78,15 +80,17 @@ void safeRead(char* sPtr, char* des, int size) {
 
     leftReg = ptrEnd - mRPtr;
     ALOGI("[safeRead]sPtr:0x%x,mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
-    if (leftReg >= size) {
-        memcpy(des, mRPtr, size);
-        mRPtr += size;
-    }
-    else {
-        memcpy(des, mRPtr, leftReg);
-        mRPtr = sPtr;
-        memcpy((des + leftReg), mRPtr, (size - leftReg));
-        mRPtr += (size - leftReg);
+    if (mRPtr != 0) {
+        if (leftReg >= size) {
+            memcpy(des, mRPtr, size);
+            mRPtr += size;
+        }
+        else {
+            memcpy(des, mRPtr, leftReg);
+            mRPtr = sPtr;
+            memcpy((des + leftReg), mRPtr, (size - leftReg));
+            mRPtr += (size - leftReg);
+        }
     }
 }
 
