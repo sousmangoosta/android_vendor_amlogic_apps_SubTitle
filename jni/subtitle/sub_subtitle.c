@@ -208,8 +208,8 @@ int get_ass_spu(char *spu_buf, unsigned length, AML_SPUVAR *spu)
     j = 0;
     for (i = 0; i < 35; i++)
     {
-        if (strncmp(spu_buf + i, "Default", 7) == 0)
-        {
+        //if (strncmp(spu_buf + i, "Default", 7) == 0)
+        //{
             j = i;
             unsigned char *p0 = strstr(spu_buf + i, "0000,0000,0000,,");
             if (p0)
@@ -227,13 +227,13 @@ int get_ass_spu(char *spu_buf, unsigned length, AML_SPUVAR *spu)
             }
             else
             {
-                j = j + i + 1;
+                j = j + i;
                 spu->buffer_size -= j;
                 memmove(spu->spu_data, spu->spu_data + j,
                 spu->buffer_size);
             }
             break;
-        }
+        //}
     }
     return ret;
 }
