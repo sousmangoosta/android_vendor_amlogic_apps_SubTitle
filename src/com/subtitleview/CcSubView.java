@@ -39,17 +39,17 @@ public class CcSubView extends View {
     private native int native_cc_set_active(boolean active);
 
     static{
-        System.loadLibrary("am_adp");
-        System.loadLibrary("am_mw");
-        System.loadLibrary("zvbi");
-        System.loadLibrary("ccsubjni");
+        //System.loadLibrary("am_adp");
+        //System.loadLibrary("am_mw");
+        //System.loadLibrary("zvbi");
+        //System.loadLibrary("ccsubjni");
     }
 
     private void init(){
         if (bitmap == null) {
             bitmap = Bitmap.createBitmap(BUFFER_W, BUFFER_H, Bitmap.Config.ARGB_8888);
         }
-        native_cc_init();
+        //native_cc_init();
         Log.d(TAG, "native init");
     }
 

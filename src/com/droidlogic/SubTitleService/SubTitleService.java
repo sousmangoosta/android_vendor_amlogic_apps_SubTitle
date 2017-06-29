@@ -106,6 +106,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     //ccsubtitleview
     private CcSubView ccSubView = null;
     private boolean isccrunning = false;
+    private boolean mCCSupport = false;
 
     public SubTitleService(Context context) {
         LOGI("[SubTitleService]");
@@ -129,7 +130,10 @@ public class SubTitleService extends ISubTitleService.Stub {
         subTitleView.setTextSize(20);
         subTitleView.setTextStyle(Typeface.NORMAL);
         subTitleView.setViewStatus(true);
-        ccSubView = (CcSubView) mSubView.findViewById(R.id.ccsubtitle);
+        mCCSupport = SystemProperties.getBoolean("sys.subtitleService.ccsupport", false);
+        if (mCCSupport) {
+            ccSubView = (CcSubView) mSubView.findViewById(R.id.ccsubtitle);
+        }
 
         new Thread(new Runnable() {
             public void run() {
@@ -404,11 +408,15 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     public void StartCcSub() {
-        sendStartCcSubMsg();
+        if (mCCSupport) {
+            sendStartCcSubMsg();
+        }
     }
 
     public void StopCcSub() {
-        sendStopCcSubMsg();
+        if (mCCSupport) {
+            sendStopCcSubMsg();
+        }
     }
 
     private void sendStartCcSubMsg() {
@@ -422,7 +430,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     private void ccStart() {
-        if (!isccrunning) {
+        if (!isccrunning && mCCSupport) {
             LOGI("cc subtitle start");
             ccSubView.startCC();
             ccSubView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
@@ -433,7 +441,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     private void ccStop() {
-        if (isccrunning) {
+        if (isccrunning && mCCSupport) {
             LOGI("cc subtitle stop");
             isccrunning = false;
             ccSubView.hide();
@@ -843,7 +851,9 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.setVisibility (View.GONE);
                         subShowState = SUB_OFF;
                     }
-                    ccSubView.hide();
+                    if (mCCSupport) {
+                        ccSubView.hide();
+                    }
                     break;
 
                 case DISPLAY:
@@ -851,7 +861,9 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.setVisibility (View.VISIBLE);
                         subShowState = SUB_ON;
                     }
-                    ccSubView.show();
+                    if (mCCSupport) {
+                        ccSubView.show();
+                    }
                     break;
 
                 case CLEAR:
