@@ -273,7 +273,7 @@ void startServer() {
 
     pthread_t sst;
     pthread_create(&sst, NULL, startServerThread, NULL);
-    pthread_join(sst, NULL);
+    //pthread_join(sst, NULL);
 }
 
 void stopServer() {
