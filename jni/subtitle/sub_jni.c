@@ -447,6 +447,11 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
         LOGE("start get new object\n\n");
         free(inter_sub_data);
         free(resize_data);
+        if (get_inter_spu_delay() <= get_subtitle_startpts()) {
+            add_read_position();
+            LOGE("subtitle_delay_pts erro, return null\n\n");
+            return NULL;
+        }
         jobject obj = (*env)->NewObject(env, cls, constr, array, 1,
                                         get_inter_spu_width(),
                                         get_inter_spu_height(),
