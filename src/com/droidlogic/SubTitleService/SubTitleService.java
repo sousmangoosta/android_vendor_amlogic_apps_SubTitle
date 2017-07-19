@@ -207,21 +207,30 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     public void close() {
         LOGI("[close]");
-        StopCcSub();
-        if (mSubtitleUtils != null) {
-            mSubtitleUtils.setSubtitleNumber(0);
-            mSubtitleUtils = null;
-        }
-
-        new Thread(new Runnable() {
-            public void run() {
-                subTitleView.stopSocketServer();
+        synchronized(this) {
+            StopCcSub();
+            if (mSubtitleUtils != null) {
+                mSubtitleUtils.setSubtitleNumber(0);
+                mSubtitleUtils = null;
             }
-        }).start();
 
-        mSubTotal = -1;
-        mSetSubId = -1;
-        sendCloseMsg();
+            new Thread(new Runnable() {
+                public void run() {
+                    subTitleView.stopSocketServer();
+                }
+            }).start();
+
+            mSubTotal = -1;
+            mSetSubId = -1;
+            //sendCloseMsg();
+
+            removeView();
+            subTitleView.stopSubThread(); //close insub parse thread
+            subTitleView.closeSubtitle();
+            subTitleView.clear();
+            subShowState = SUB_OFF;
+            mRatioSet = false;
+        }
     }
 
     public int getSubTotal() {

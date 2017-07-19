@@ -646,7 +646,7 @@ JNIEXPORT void JNICALL startSubThread(JNIEnv *env, jclass cl)
         subThreadRunning = 1;
         sub_thread = 1;
         subtitle_thread_create();
-        init_subtitle_file();
+        init_subtitle_file(0);
     }
 }
 
@@ -680,7 +680,7 @@ JNIEXPORT jstring JNICALL getSubPcrscr(JNIEnv *env, jclass cl)
 
 JNIEXPORT void JNICALL stopSubThread(JNIEnv *env, jclass cl)
 {
-    if (subThreadRunning == 1)
+    //if (subThreadRunning == 1)
     {
         subThreadRunning = 0;
         sub_thread = 0;
@@ -689,7 +689,7 @@ JNIEXPORT void JNICALL stopSubThread(JNIEnv *env, jclass cl)
 
 JNIEXPORT void JNICALL  resetForSeek(JNIEnv *env, jclass cl)
 {
-    init_subtitle_file();
+    init_subtitle_file(1);
 }
 
 static JNINativeMethod gMethods[] =

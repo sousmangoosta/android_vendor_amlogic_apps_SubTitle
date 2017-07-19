@@ -93,6 +93,8 @@ char *restbuf = NULL;
 int restlen = 0;
 //extern int sub_thread;
 lock_t sublock;
+lock_t closelock;
+lock_t handlelock;
 int subtitle_status = 0;
 
 typedef struct
@@ -789,9 +791,11 @@ int set_short_value(unsigned short value, char *data, int *pos)
     return 0;
 }
 
-int init_subtitle_file()
+int init_subtitle_file(int need_close)
 {
-    close_subtitle();
+    if (need_close == 1) {
+        close_subtitle();
+    }
     init_pgs_subtitle();
     dvbsub_init_decoder();
     dvdsub_init_decoder();
@@ -1396,25 +1400,35 @@ int *parser_inter_spu2(int *buffer)
 
 int get_inter_spu()
 {
+    lp_lock(&handlelock);
     LOGI("## get_inter_spu aml_sub_handle=%d, ----------\n",
          aml_sub_handle);
-    if (aml_sub_handle < 0)
+    if (aml_sub_handle < 0 && (subtitle_status == SUB_INIT || subtitle_status == SUB_STOP))
     {
         aml_sub_handle = open(SUBTITLE_READ_DEVICE, O_RDONLY);
+        lp_unlock(&handlelock);
         return -1;
     }
     if (aml_sub_handle < 0)
     {
         LOGI("subtitle read device open fail\n");
+        lp_unlock(&handlelock);
         return 0;
+    }
+
+    if (subtitle_status == SUB_INIT)
+    {
+        subtitle_status = SUB_PLAYING;
     }
     int read_sub_fd = 0;
     AML_SPUVAR spu;
     memset(&spu, 0x0, sizeof(AML_SPUVAR));
     spu.sync_bytes = 0x414d4c55;
     int ret = get_spu(&spu, aml_sub_handle);
-    if (ret < 0)
+    if (ret < 0) {
+        lp_unlock(&handlelock);
         return -1;
+    }
     //  if(get_subtitle_subtype()==1){
     //      spu.buffer_size = spu.spu_width*spu.spu_height*4;
     //  }
@@ -1424,12 +1438,16 @@ int get_inter_spu()
     //  file_position = ADD_SUBTITLE_POSITION(file_position);
     LOGI("file_position is %d\n\n", file_position);
     LOGI("end parser subtitle success\n");
+    lp_unlock(&handlelock);
     return 0;
 }
 
 int close_subtitle()
 {
-    LOGI("----------------------close_subtitle------------------------------");
+    LOGI("----------------------close_subtitle------------------------------aml_sub_handle:%d\n", aml_sub_handle);
+    if (subtitle_status == SUB_STOP) {
+        return 0;
+    }
     subtitle_status = SUB_STOP;
     if (get_subtitle_subtype() == 5)    // dvb sub
     {
@@ -1437,8 +1455,13 @@ int close_subtitle()
         usleep(100000);
     }
     LOGI("start to close subtitle \n");
-    lp_lock(&sublock);
+    lp_lock(&closelock);
     //resetSocketBuffer();
+    if (aml_sub_handle >= 0)
+    {
+        int ret = close(aml_sub_handle);
+        aml_sub_handle = -1;
+    }
     dvbsub_close_decoder();
     close_pgs_subtitle();
     if (restbuf)
@@ -1457,11 +1480,6 @@ int close_subtitle()
     }
     file_position = 0;
     read_position = 0;
-    if (aml_sub_handle >= 0)
-    {
-        close(aml_sub_handle);
-        aml_sub_handle = -1;
-    }
-    lp_unlock(&sublock);
+    lp_unlock(&closelock);
     return 0;
 }
