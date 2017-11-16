@@ -186,7 +186,9 @@ int amsysfs_get_sysfs_int(const char *path)
     int val = 0;
     if (amSystemControlReadSysfs(path, bcmd) == 0)
     {
-        val = strtol(bcmd, NULL, 10);
+        if (strlen(bcmd) > 0) {
+            val = strtol(bcmd, NULL, 10);
+        }
     }
     return val;
 }

@@ -1,7 +1,5 @@
 #define LOG_TAG "amSystemControl"
 
-#include <../../../../../vendor/amlogic/frameworks/services/systemcontrol/ISystemControlService.h>
-
 #include <binder/Binder.h>
 #include <binder/IServiceManager.h>
 #include <utils/Atomic.h>
@@ -16,6 +14,8 @@
 #include <MemoryLeakTrackUtilTmp.h>
 #include <fcntl.h>
 
+#include <../../../../../vendor/amlogic/frameworks/services/systemcontrol/SystemControlClient.h>
+
 using namespace android;
 
 class DeathNotifier: public IBinder::DeathRecipient
@@ -29,94 +29,62 @@ class DeathNotifier: public IBinder::DeathRecipient
         }
 };
 
-static sp < ISystemControlService > amSystemControlService;
 static sp < DeathNotifier > amDeathNotifier;
 static Mutex amLock;
 static Mutex amgLock;
+static SystemControlClient *mScc = new SystemControlClient();
 
-const sp < ISystemControlService > &getSystemControlService()
+int amSystemControlGetProperty(const char* key, char* value)
 {
-    Mutex::Autolock _l(amgLock);
-    if (amSystemControlService.get() == 0)
+    if (mScc != NULL)
     {
-        sp < IServiceManager > sm = defaultServiceManager();
-        sp < IBinder > binder;
-        do
+        const std::string stdKey(key);
+        std::string stdValue(value);
+        if (mScc->getProperty(stdKey, stdValue))
         {
-            binder = sm->getService(String16("system_control"));
-            if (binder != 0)
-                break;
-            ALOGW("SystemControl not published, waiting...");
-            usleep(500000); // 0.5 s
-        }
-        while (true);
-        if (amDeathNotifier == NULL)
-        {
-            amDeathNotifier = new DeathNotifier();
-        }
-        binder->linkToDeath(amDeathNotifier);
-        amSystemControlService =
-            interface_cast < ISystemControlService > (binder);
-    }
-    ALOGE_IF(amSystemControlService == 0, "no System Control Service!?");
-    return amSystemControlService;
-}
-
-int amSystemControlGetProperty(const char *key, char *value)
-{
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
-    {
-        String16 v;
-        if (scs->getProperty(String16(key), v))
-        {
-            strcpy(value, String8(v).string());
             return 0;
         }
     }
     return -1;
 }
 
-int amSystemControlGetPropertyStr(const char *key, char *def, char *value)
+int amSystemControlGetPropertyStr(const char* key, char* def, char* value)
 {
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
-    {
-        String16 v;
-        String16 d(def);
-        scs->getPropertyString(String16(key), v, d);
-        strcpy(value, String8(v).string());
+    if (mScc != NULL) {
+        const std::string stdKey(key);
+        std::string stdDef(def);
+        std::string stdValue(value);
+        mScc->getPropertyString(stdKey, stdValue, stdDef);
     }
-    strcpy(value, def);
     return -1;
 }
 
-int amSystemControlGetPropertyInt(const char *key, int def)
+int amSystemControlGetPropertyInt(const char* key, int def)
 {
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
+    if (mScc != NULL)
     {
-        return scs->getPropertyInt(String16(key), def);
+        const std::string stdKey(key);
+        return mScc->getPropertyInt(stdKey, def);
     }
     return def;
 }
 
-long amSystemControlGetPropertyLong(const char *key, long def)
+long amSystemControlGetPropertyLong(const char* key, long def)
 {
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
+    if (mScc != NULL)
     {
-        return scs->getPropertyLong(String16(key), def);
+        const std::string stdKey(key);
+        return mScc->getPropertyLong(stdKey, (int64_t)def);
     }
     return def;
 }
 
-int amSystemControlGetPropertyBool(const char *key, int def)
+int amSystemControlGetPropertyBool(const char* key, int def)
 {
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
+    if (mScc != NULL)
     {
-        if (scs->getPropertyBoolean(String16(key), def))
+        const std::string stdKey(key);
+        if (mScc->getPropertyBoolean(stdKey, def))
         {
             return 1;
         }
@@ -128,76 +96,65 @@ int amSystemControlGetPropertyBool(const char *key, int def)
     return def;
 }
 
-void amSystemControlSetProperty(const char *key, const char *value)
+void amSystemControlSetProperty(const char* key, const char* value)
 {
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
+    if (mScc != NULL)
     {
-        scs->setProperty(String16(key), String16(value));
+        const std::string stdKey(key);
+        const std::string stdValue(value);
+        mScc->setProperty(stdKey, stdValue);
     }
 }
 
-int amSystemControlReadSysfs(const char *path, char *value)
+int amSystemControlReadSysfs(const char* path, char* value)
 {
-    //ALOGD("amSystemControlReadNumSysfs:%s",path);
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
+    if (mScc != NULL)
     {
-        String16 v;
-        if (scs->readSysfs(String16(path), v))
+        const std::string stdPath(path);
+        std::string stdValue(value);
+        if (mScc->readSysfs(stdPath, stdValue))
         {
-            strcpy(value, String8(v).string());
+            ALOGE("amSystemControlReadSysfs stdValue:%s", stdValue.c_str());
             return 0;
         }
     }
     return -1;
 }
 
-int amSystemControlReadNumSysfs(const char *path, char *value, int size)
+int amSystemControlReadNumSysfs(const char* path, char* value, int32_t size)
 {
     //ALOGD("amSystemControlReadNumSysfs:%s",path);
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0 && value != NULL && access(path, 0) != -1)
+    //const sp < ISystemControlService > &scs = getSystemControlService();
+    if (mScc != NULL /*&& value != NULL && access(path, 0) != -1*/)
     {
-        String16 v;
-        if (scs->readSysfs(String16(path), v))
+        //String16 v;
+        /*if (mScc->readSysfs(path, value))
         {
-            if (v.size() != 0)
+            if (value.size() != 0)
             {
-                //ALOGD("readSysfs ok:%s,%s,%d", path, String8(v).string(), String8(v).size());
-                memset(value, 0, size);
-                if (size <= String8(v).size() + 1)
+                if (size <= value.size() + 1)
                 {
-                    memcpy(value, String8(v).string(),
-                           size - 1);
-                    value[strlen(value)] = '\0';
-                }
-                else
-                {
-                    strcpy(value, String8(v).string());
+                    value[size] = '\0';
                 }
                 return 0;
             }
-        }
+        }*/
     }
     //ALOGD("[false]amSystemControlReadNumSysfs%s,",path);
     return -1;
 }
 
-int amSystemControlWriteSysfs(const char *path, char *value)
+int amSystemControlWriteSysfs(const char* path, char* value)
 {
-    //ALOGD("amSystemControlWriteSysfs:%s",path);
-    const sp < ISystemControlService > &scs = getSystemControlService();
-    if (scs != 0)
+    if (mScc != NULL)
     {
-        String16 v(value);
-        if (scs->writeSysfs(String16(path), v))
+        const std::string stdPath(path);
+        std::string stdValue(value);
+        if (mScc->writeSysfs(stdPath, stdValue))
         {
-            //ALOGD("writeSysfs ok");
             return 0;
         }
     }
-    //ALOGD("[false]amSystemControlWriteSysfs%s,",path);
     return -1;
 }
 

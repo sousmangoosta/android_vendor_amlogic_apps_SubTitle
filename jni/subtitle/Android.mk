@@ -10,7 +10,7 @@ LOCAL_C_INCLUDES := $(JNI_H_INCLUDE) \
     $(TOP)/frameworks/native/services \
     $(TOP)/frameworks/native/include
 
-LOCAL_SHARED_LIBRARIES += libutils libmedia libcutils libbinder libsystemcontrolservice liblog
+LOCAL_SHARED_LIBRARIES += libutils libmedia libcutils libbinder libsystemcontrolservice liblog vendor.amlogic.hardware.systemcontrol@1.0_vendor
 
 LOCAL_PRELINK_MODULE := false
 
