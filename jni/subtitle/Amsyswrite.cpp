@@ -14,7 +14,7 @@
 #include <MemoryLeakTrackUtilTmp.h>
 #include <fcntl.h>
 
-#include <../../../../frameworks/services/systemcontrol/SystemControlClient.h>
+#include <SystemControlClient.h>
 
 using namespace android;
 
