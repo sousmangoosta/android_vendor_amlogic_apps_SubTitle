@@ -56,7 +56,7 @@ public class SubtitleLine {
         //add support pixmap: get w, h,source,and then change to Bitmap
         public Bitmap curBitmap() {
             //call jni
-            return Bitmap.createBitmap (null);
+            return Bitmap.createBitmap(0, 0, Bitmap.Config.ARGB_8888);
         }
         public SubtitleTime getBegin() {
             return begin;
