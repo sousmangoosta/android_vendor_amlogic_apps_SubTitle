@@ -34,7 +34,8 @@
 namespace android
 {
 
-#if defined(__arm__)
+#if defined(__VNDK_NOSO__)
+//#if defined(__arm__)
 
     extern "C" void get_malloc_leak_info(uint8_t **info,
                                          size_t *overallSize,

@@ -12,7 +12,6 @@ LOCAL_C_INCLUDES := $(JNI_H_INCLUDE) \
 
 LOCAL_SHARED_LIBRARIES += \
     libutils \
-    libmedia \
     libcutils \
     libbinder \
     libsystemcontrolservice \

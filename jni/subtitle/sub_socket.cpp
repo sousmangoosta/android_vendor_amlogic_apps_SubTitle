@@ -21,7 +21,6 @@
 #include <utils/Log.h>
 #include <binder/IPCThreadState.h>
 #include <binder/IServiceManager.h>
-#include <binder/PermissionCache.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
