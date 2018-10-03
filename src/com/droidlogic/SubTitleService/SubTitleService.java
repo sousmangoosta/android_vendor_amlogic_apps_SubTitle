@@ -776,10 +776,10 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     @Override
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
-        LOGI("[dump]fd:" + fd.getInt$() + ",mSubtitleUtils:" + mSubtitleUtils);
+        /*LOGI("[dump]fd:" + fd.getInt$() + ",mSubtitleUtils:" + mSubtitleUtils);
         if (mSubtitleUtils != null) {
             mSubtitleUtils.nativeDump(fd.getInt$());
-        }
+        }*/
     }
 
     private Handler mHandler = new Handler() {

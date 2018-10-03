@@ -4,7 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.os.ServiceManager;
+//import android.os.ServiceManager;
+import android.os.IBinder;
+
+import java.lang.reflect.Method;
 import com.droidlogic.app.SystemControlManager;
 
 public class SubTitleServiceBroadcastReceiver extends BroadcastReceiver {
@@ -23,12 +26,38 @@ public class SubTitleServiceBroadcastReceiver extends BroadcastReceiver {
             }
 
             if (Intent.ACTION_BOOT_COMPLETED.equals (action)) {
-                if (ServiceManager.getService("subtitle_service") == null) {
+                if (getSubtitleService() == null) {
                     subtitleService = new SubTitleService (context);
-                    ServiceManager.addService (/*Context.SUBTITLE_SERVICE*/"subtitle_service", subtitleService);
+                    addSubtitleService();
+                    //ServiceManager.addService (/*Context.SUBTITLE_SERVICE*/"subtitle_service", subtitleService);
                 } else {
                     Log.i (TAG, "subtitle_service is already added.");
                 }
+            }
+        }
+
+
+        public boolean addSubtitleService() {
+            try {
+                Class<?> sm = Class.forName("android.os.ServiceManager");
+                Method addSubtitleService = sm.getMethod("addService", String.class,IBinder.class);
+                addSubtitleService.invoke(null, "subtitle_service");
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        public IBinder getSubtitleService() {
+            try {
+                Class<?> sm = Class.forName("android.os.ServiceManager");
+                Method getSubtitleService = sm.getMethod("getService", String.class);
+                IBinder mSubtitleService = (IBinder)getSubtitleService.invoke(null, "subtitle_service");
+                return mSubtitleService;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
             }
         }
 }
