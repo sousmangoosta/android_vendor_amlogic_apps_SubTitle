@@ -18,7 +18,10 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-java-files-under, src) \
     src/com/droidlogic/SubTitleService/ISubTitleService.aidl
 
-#LOCAL_PRIVATE_PLATFORM_APIS := true
+ifndef PRODUCT_SHIPPING_API_LEVEL
+LOCAL_PRIVATE_PLATFORM_APIS := true
+endif
+
 LOCAL_PROGUARD_ENABLED := disabled
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
