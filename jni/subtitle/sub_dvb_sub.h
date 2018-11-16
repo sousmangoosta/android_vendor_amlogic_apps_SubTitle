@@ -1,11 +1,11 @@
 /*
- * DVB subtitle decoding for ffmpeg
- * Copyright (c) 2005 Ian Caulfield
- *
- * This file is part of FFmpeg.
- *
- * data: 2013-08-15 Lujian.Hu@amlogic.com
- */
+* Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+*
+* This source code is subject to the terms and conditions defined in the
+* file 'LICENSE' which is part of this source code package.
+*
+* Description:
+*/
 
 #ifndef _DVB_SUB_H
 #define _DVB_SUB_H

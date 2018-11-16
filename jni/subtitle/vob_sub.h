@@ -1,13 +1,11 @@
-/*******************************************************************
- *
- *  Copyright C 2005 by Amlogic, Inc. All Rights Reserved.
- *
- *  Description:
- *
- *  Author: Amlogic Software
- *  Created: 12/22/2005 9:12PM
- *
- *******************************************************************/
+/*
+* Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+*
+* This source code is subject to the terms and conditions defined in the
+* file 'LICENSE' which is part of this source code package.
+*
+* Description:
+*/
 #ifndef VOB_SUB_H
 #define VOB_SUB_H
 
