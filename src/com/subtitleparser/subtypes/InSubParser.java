@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: java file
 */
 package com.subtitleparser.subtypes;
 
@@ -62,7 +62,7 @@ class InSubApi extends SubtitleApi {
         InSubApi (String file1, int id) {
             filename = file1;
             index = id;
-            setInSubtitleNumberByJni (index, filename);
+            //setInSubtitleNumberByJni (index, filename);
         };
         public int getSubTypeDetial() {
             Log.i ("InSubApi",   "getInSubType():" + getInSubType());
@@ -78,6 +78,7 @@ class InSubApi extends SubtitleApi {
         public SubData getdata (int millisec) {
             //add  value to bitmap
             //add  value to begingtime,endtime
+            Log.i ("InSubApi",   "[getdata]millisec:"+millisec);
             inter_data = getrawdata (millisec);
             //cause delay time always is zero for pgs format, so we should hadle it with special method
             /*if(getInSubType() == 0) {

@@ -4,15 +4,8 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: c file
 */
-/************************************************
- * name :vob_sub.c
- * function :decoder relative functions
- * data     :2010.8.10
- * author       :FFT
- * version  :1.0.0
- *************************************************/
 //header file
 #include <unistd.h>
 #include <stdio.h>

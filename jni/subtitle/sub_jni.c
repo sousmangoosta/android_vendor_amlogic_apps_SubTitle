@@ -4,11 +4,8 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: c file
 */
-////////////////////////////////////////////////////////////////////////////////
-// JNI Interface
-////////////////////////////////////////////////////////////////////////////////
 
 #include <jni.h>
 #include <android/log.h>
@@ -234,6 +231,7 @@ JNIEXPORT void JNICALL closeInSubView(JNIEnv *env, jclass cl)
 
 JNIEXPORT jint JNICALL getInSubType(JNIEnv *env, jclass cl)
 {
+    LOGE("[getInSubType]subtype:%d",get_inter_sub_type());
     return get_inter_sub_type();
 }
 
@@ -455,6 +453,11 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
         LOGE("start get new object\n\n");
         free(inter_sub_data);
         free(resize_data);
+        if (get_inter_spu_delay() <= get_subtitle_startpts()) {
+            add_read_position();
+            LOGE("subtitle_delay_pts erro, return null\n\n");
+            return NULL;
+        }
         jobject obj = (*env)->NewObject(env, cls, constr, array, 1,
                                         get_inter_spu_width(),
                                         get_inter_spu_height(),
@@ -575,6 +578,7 @@ void *inter_subtitle_parser()
 {
     int inner_sub_total = get_subtitle_num();
     int inner_sub_type = get_subtitle_subtype();
+
     //sub_thread = 1;
     while (sub_thread)
     {
@@ -649,7 +653,7 @@ JNIEXPORT void JNICALL startSubThread(JNIEnv *env, jclass cl)
         subThreadRunning = 1;
         sub_thread = 1;
         subtitle_thread_create();
-        init_subtitle_file();
+        init_subtitle_file(0);
     }
 }
 
@@ -683,7 +687,7 @@ JNIEXPORT jstring JNICALL getSubPcrscr(JNIEnv *env, jclass cl)
 
 JNIEXPORT void JNICALL stopSubThread(JNIEnv *env, jclass cl)
 {
-    if (subThreadRunning == 1)
+    //if (subThreadRunning == 1)
     {
         subThreadRunning = 0;
         sub_thread = 0;
@@ -692,7 +696,7 @@ JNIEXPORT void JNICALL stopSubThread(JNIEnv *env, jclass cl)
 
 JNIEXPORT void JNICALL  resetForSeek(JNIEnv *env, jclass cl)
 {
-    init_subtitle_file();
+    init_subtitle_file(1);
 }
 
 static JNINativeMethod gMethods[] =

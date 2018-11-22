@@ -46,7 +46,6 @@ void stopSocketServer() {
 
 int getInfo(int type) {
     int ret = -1;
-
     if (mIOType == IO_TYPE_SOCKET) {
         ret = getInfoBySkt(type);
     }

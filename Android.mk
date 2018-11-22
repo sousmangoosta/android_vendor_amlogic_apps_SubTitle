@@ -16,7 +16,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src) \
-    src/com/droidlogic/SubTitleService/ISubTitleService.aidl
+    src/com/droidlogic/app/ISubTitleService.aidl
 
 ifndef PRODUCT_SHIPPING_API_LEVEL
 LOCAL_PRIVATE_PLATFORM_APIS := true
@@ -31,7 +31,7 @@ endif
 LOCAL_PACKAGE_NAME := SubTitle
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := droidlogic
-LOCAL_REQUIRED_MODULES := libsubjni libccsubjni
+LOCAL_REQUIRED_MODULES := libsubjni
 
 include $(BUILD_PACKAGE)
 include $(call all-makefiles-under,$(LOCAL_PATH))

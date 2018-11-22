@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: java file
 */
 package com.subtitleparser;
 
@@ -71,6 +71,7 @@ public class FileIO {
         }
 
         public static Subtitle.SUBTYPE dectFileType (String filePath, String encoding) {
+            Log.i("FileIO", "[dectFileType]filePath:" + ",encoding:"+encoding);
             BufferedReader input = null;
             Subtitle.SUBTYPE type = Subtitle.SUBTYPE.SUB_INVALID;
             int testMaxLines = 60;

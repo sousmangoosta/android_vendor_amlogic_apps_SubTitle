@@ -7,25 +7,21 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := sub_jni.c sub_api.c log_print.c sub_subtitle.c sub_vob_sub.c sub_set_sys.c vob_sub.c sub_pgs_sub.c sub_control.c avi_sub.c sub_dvb_sub.c amsysfsutils.c Amsyswrite.cpp MemoryLeakTrackUtilTmp.cpp sub_socket.cpp sub_io.cpp
 LOCAL_ARM_MODE := arm
 LOCAL_C_INCLUDES := $(JNI_H_INCLUDE) \
-    frameworks/native/services \
+    $(BOARD_AML_VENDOR_PATH)/frameworks/services/systemcontrol/pq/include \
+    $(BOARD_AML_VENDOR_PATH)/frameworks/services \
+    libnativehelper/include/nativehelper \
     frameworks/native/include
 
-LOCAL_SHARED_LIBRARIES += \
-    libutils \
-    libcutils \
-    libbinder \
-    libsystemcontrolservice \
-    liblog \
-    vendor.amlogic.hardware.systemcontrol@1.0
-
-LOCAL_C_INCLUDES += \
-  $(BOARD_AML_VENDOR_PATH)/frameworks/services/systemcontrol \
-  $(BOARD_AML_VENDOR_PATH)/frameworks/services/systemcontrol/PQ/include
-
-LOCAL_PRELINK_MODULE := false
+LOCAL_C_INCLUDES += vendor/amlogic/common/frameworks/services/systemcontrol
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
 LOCAL_PROPRIETARY_MODULE := true
 endif
+
+
+LOCAL_PROGUARD_ENABLED := disabled
+LOCAL_SHARED_LIBRARIES += libutils  libcutils liblog
+LOCAL_CFLAGS += -DANDROID_PLATFORM_SDK_VERSION=$(PLATFORM_SDK_VERSION)
+LOCAL_PRELINK_MODULE := false
 
 include $(BUILD_SHARED_LIBRARY)

@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: java file
 */
 package com.subtitleview;
 
@@ -32,7 +32,9 @@ public class SubManager {
         }
 
         public SubManager() {
+            Log.i(TAG,"[SubManager]-1-");
             subtitle = new Subtitle();
+            Log.i(TAG,"[SubManager]-2-");
             clear();
         }
 

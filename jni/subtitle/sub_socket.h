@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: h file
 */
 #ifndef SUB_SOCKET_H
 #define SUB_SOCKET_H
@@ -25,7 +25,8 @@ extern "C" {
 #define LISTEN_PORT 10100
 
 static int mSockFd;
-static int mStop;
+static bool mStop;
+static bool mClientStop;
 static char *mLoopBuf;
 static char *mRPtr;
 static char *mWPtr;
@@ -38,6 +39,8 @@ static int64_t mSize;
 //client parameters
 static int client_list[QUEUE_SIZE];
 static int client_num;
+
+static bool isStartServerTread;
 
 static void* startServerThread(void* arg);
 static void child_connect(int sockfd);

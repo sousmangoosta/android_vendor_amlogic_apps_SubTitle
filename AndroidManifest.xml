@@ -3,25 +3,21 @@
     package="com.droidlogic.SubTitleService"
     android:versionCode="1"
     android:versionName="1.0"
-    android:sharedUserId="android.uid.system"> 
+    android:sharedUserId="android.uid.system">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" /> 
+    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="droidlogic.permission.SYSTEM_CONTROL" />
-    <application
-        android:persistent="true">
+    <application>
         <uses-library android:name="droidlogic.software.core" />
-
-        <service android:name=".SubTitleService">  
-            <intent-filter>  
-                <action android:name="com.droidlogic.SubTitleService.SubTitleService"/>  
-            </intent-filter>  
-        </service> 
-        <receiver android:name=".SubTitleServiceBroadcastReceiver">
+        <service
+            android:name=".SubTitleServer"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="com.droidlogic.SubTitleServer"/>
             </intent-filter>
-        </receiver>
+        </service>
     </application>
-</manifest> 
+</manifest>

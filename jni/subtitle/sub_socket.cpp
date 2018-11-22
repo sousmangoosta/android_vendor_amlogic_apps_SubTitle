@@ -19,8 +19,9 @@
 
 #include <fcntl.h>
 #include <utils/Log.h>
-#include <binder/IPCThreadState.h>
-#include <binder/IServiceManager.h>
+//#include <binder/IPCThreadState.h>
+//#include <binder/IServiceManager.h>
+//#include <binder/PermissionCache.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -57,16 +58,18 @@ void safeCopy(char* sPtr, char* src, int size) {
 
     //skip case for data recover, which means write ptr is 256*1024 bigger than read ptr
     leftReg = ptrEnd - mWPtr;
-    ALOGI("[safeCopy]sPtr:0x%x, mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
-    if (leftReg >= size) {
-        memcpy(mWPtr, src, size);
-        mWPtr += size;
-    }
-    else {
-        memcpy(mWPtr, src, leftReg);
-        mWPtr = sPtr;
-        memcpy(mWPtr, (src + leftReg), (size - leftReg));
-        mWPtr += (size - leftReg);
+    ALOGV("[safeCopy]sPtr:0x%x, mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
+    if (mWPtr != 0) {
+        if (leftReg >= size) {
+            memcpy(mWPtr, src, size);
+            mWPtr += size;
+        }
+        else {
+            memcpy(mWPtr, src, leftReg);
+            mWPtr = sPtr;
+            memcpy(mWPtr, (src + leftReg), (size - leftReg));
+            mWPtr += (size - leftReg);
+        }
     }
 }
 
@@ -76,16 +79,18 @@ void safeRead(char* sPtr, char* des, int size) {
     int leftReg = 0;//from nearest rptr to ptrEnd
 
     leftReg = ptrEnd - mRPtr;
-    ALOGI("[safeRead]sPtr:0x%x,mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
-    if (leftReg >= size) {
-        memcpy(des, mRPtr, size);
-        mRPtr += size;
-    }
-    else {
-        memcpy(des, mRPtr, leftReg);
-        mRPtr = sPtr;
-        memcpy((des + leftReg), mRPtr, (size - leftReg));
-        mRPtr += (size - leftReg);
+    ALOGV("[safeRead]sPtr:0x%x,mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
+    if (mRPtr != 0) {
+        if (leftReg >= size) {
+            memcpy(des, mRPtr, size);
+            mRPtr += size;
+        }
+        else {
+            memcpy(des, mRPtr, leftReg);
+            mRPtr = sPtr;
+            memcpy((des + leftReg), mRPtr, (size - leftReg));
+            mRPtr += (size - leftReg);
+        }
     }
 }
 
@@ -100,74 +105,78 @@ int getDataSize(char* sPtr) {
     else {
         size = (ptrEnd - mRPtr) + (mWPtr - ptrStart);
     }
-    ALOGI("[getDataSize]mWPtr:0x%x, mRPtr:0x%x, size:%d\n", mWPtr, mRPtr, size);
+    //ALOGV("[getDataSize]mWPtr:0x%x, mRPtr:0x%x, size:%d\n", mWPtr, mRPtr, size);
 
     return size;
 }
 
 void* startServerThread(void* arg) {
-    struct sockaddr_in addr;
-    memset((void *)&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(LISTEN_PORT);
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    mSockFd = socket(AF_INET, SOCK_STREAM, 0);
+    ALOGE("[startServerThread]isStartServerTread:%d\n",isStartServerTread);
+    if (!isStartServerTread) {
+        isStartServerTread = true;
+        struct sockaddr_in addr;
+        memset((void *)&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(LISTEN_PORT);
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        mSockFd = socket(AF_INET, SOCK_STREAM, 0);
 
-    mStop = 0;
-    mLoopBuf = NULL;
-    /*mSockFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    struct sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    snprintf(addr.sun_path, sizeof(addr.sun_path), "/dev/socket/sub_socket");
-    int ret = unlink(addr.sun_path);
-    if (ret != 0 && errno != ENOENT) {
-        ALOGE("Failed to unlink old socket '%s': %s\n", addr.sun_path, strerror(errno));
-        return NULL;
-    }*/
-    int on = 1;
-    if ((setsockopt(mSockFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0) {
-        ALOGE("setsockopt failed.\n");
-        exit(1);
-    }
-    if (bind(mSockFd,(struct sockaddr *)&addr,sizeof(addr)) == -1) {
-        ALOGE("bind fail. error=%d, err:%s\n", errno, strerror(errno));
-        return NULL;
-    }
-    /*if (fchmodat(AT_FDCWD, addr.sun_path, (mode_t)0666, AT_SYMLINK_NOFOLLOW)) {
-        ALOGE("fchmodat %s fail.error=%d, err:%s\n", addr.sun_path, errno, strerror(errno));
-        return NULL;;
-    }*/
-    if (listen(mSockFd, QUEUE_SIZE) == -1) {
-        ALOGE("listen fail.error=%d, err:%s\n", errno, strerror(errno));
-        return NULL;;
-    }
-    ALOGI("[startServerThread]listen success.\n");
-    while (mStop != 1) {
-        struct sockaddr_in client_addr;
-        socklen_t length = sizeof(client_addr);
-        int connFd = accept(mSockFd, (struct sockaddr*)&client_addr, &length);
-        if (client_num++ > 9) {
-            client_num= 9;
-            close(mSockFd);
-            ALOGI("client number is limited");
-            continue;
+        mStop = false;
+        mLoopBuf = NULL;
+        /*mSockFd = socket(AF_UNIX, SOCK_STREAM, 0);
+        struct sockaddr_un addr;
+        addr.sun_family = AF_UNIX;
+        snprintf(addr.sun_path, sizeof(addr.sun_path), "/dev/socket/sub_socket");
+        int ret = unlink(addr.sun_path);
+        if (ret != 0 && errno != ENOENT) {
+            ALOGE("Failed to unlink old socket '%s': %s\n", addr.sun_path, strerror(errno));
+            return NULL;
+         }*/
+         int on = 1;
+         if ((setsockopt(mSockFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0) {
+             ALOGE("setsockopt failed.\n");
+             exit(1);
+         }
+         if (bind(mSockFd,(struct sockaddr *)&addr,sizeof(addr)) == -1) {
+             ALOGE("bind fail. error=%d, err:%s\n", errno, strerror(errno));
+             return NULL;
+         }
+         /*if (fchmodat(AT_FDCWD, addr.sun_path, (mode_t)0666, AT_SYMLINK_NOFOLLOW)) {
+             ALOGE("fchmodat %s fail.error=%d, err:%s\n", addr.sun_path, errno, strerror(errno));
+             return NULL;;
+         }*/
+         if (listen(mSockFd, QUEUE_SIZE) == -1) {
+             ALOGE("listen fail.error=%d, err:%s\n", errno, strerror(errno));
+             return NULL;;
+         }
+         ALOGV("[startServerThread]listen success.\n");
+         while (!mStop) {
+             struct sockaddr_in client_addr;
+             socklen_t length = sizeof(client_addr);
+             int connFd = accept(mSockFd, (struct sockaddr*)&client_addr, &length);
+             if (client_num++ > 9) {
+                 client_num= 9;
+                 close(mSockFd);
+                 ALOGV("client number is limited");
+                 continue;
+             }
+             if (connFd < 0) {
+                 ALOGE("client connect fail.error=%d, err:%s\n", errno, strerror(errno));
+                 exit(1);
+             }
+             ALOGV("new client accepted.\n");
+             child_connect(connFd);
+             /*pid_t childid;
+             if (childid = fork() == 0) {
+                 ALOGV("child process: %d created.\n", getpid());
+                 close(mSockFd);
+                 child_connect(connFd);
+                 exit(0);
+              }*/
         }
-        if (connFd < 0) {
-            ALOGE("client connect fail.error=%d, err:%s\n", errno, strerror(errno));
-            exit(1);
-        }
-        ALOGI("new client accepted.\n");
-        child_connect(connFd);
-        /*pid_t childid;
-        if (childid = fork() == 0) {
-            ALOGI("child process: %d created.\n", getpid());
-            close(mSockFd);
-            child_connect(connFd);
-            exit(0);
-        }*/
+        ALOGV("closed.\n");
+        close(mSockFd);
     }
-    ALOGI("closed.\n");
-    close(mSockFd);
     return NULL;
 }
 
@@ -176,6 +185,7 @@ void child_connect(int sockfd) {
     char sendBuf[32] = {0};
     int retLen = 0;
     char retLenStr[32] = {0};
+    mClientStop = false;
 
     if (mLoopBuf == NULL) {
         mLoopBuf = (char *)malloc(LOOP_BUFFER_SIZE);
@@ -186,18 +196,19 @@ void child_connect(int sockfd) {
 
     pid_t pid = getpid();
     client_list[client_num] = sockfd;
-    while (mStop != 1) {
+    while (!mClientStop) {
+        //ALOGV("[child_connect]recv begin...\n");
         retLen = recv(sockfd, recvBuf, sizeof(recvBuf), 0);
         if (retLen < 0) {
             ALOGE("child recv fail, retLen: %d\n", retLen);
             break;
         }
         if (!strncmp(recvBuf,"exit\n", 5)) {
-            ALOGI("child process: %d exited.\n", pid);
+            ALOGV("child process: %d exited.\n", pid);
             break;
         }
         if (!strncmp(recvBuf,"reset\n", 6)) {
-            ALOGI("child process: %d reset.\n", pid);
+            ALOGV("child process: %d reset.\n", pid);
             resetSocketBuffer();
             continue;
         }
@@ -211,7 +222,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            //ALOGI("child recv, mTotal:%d\n", mTotal);
+            //ALOGV("child recv, mTotal:%d\n", mTotal);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x50
@@ -222,7 +233,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            //ALOGI("child recv, mStartPts:%" PRId64 "\n", mStartPts);
+            //ALOGV("child recv, mStartPts:%" PRId64 "\n", mStartPts);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x54
@@ -233,7 +244,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            //ALOGI("child recv, mType:%d\n", mType);
+            //ALOGV("child recv, mType:%d\n", mType);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x52
@@ -243,7 +254,7 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            //ALOGI("child recv, mTimeUs:%d\n", mTimeUs);
+            //ALOGV("child recv, mTimeUs:%d\n", mTimeUs);
         }
         else/* if (recvBuf[0] == 'A' && recvBuf[1] == 'M' && recvBuf[2] == 'L') */{
             safeCopy(mLoopBuf, recvBuf, retLen);
@@ -261,6 +272,11 @@ void child_connect(int sockfd) {
     client_num--;
 }
 
+/*void childConnectThread(int sockfd) {
+    pthread_t cct;
+    pthread_create(&cct, NULL, child_connect, &sockfd);
+}*/
+
 void startServer() {
     mTotal = -1;
     mStartPts = -1;
@@ -268,7 +284,7 @@ void startServer() {
 
     pthread_t sst;
     pthread_create(&sst, NULL, startServerThread, NULL);
-    pthread_join(sst, NULL);
+    //pthread_join(sst, NULL);
 }
 
 void stopServer() {
@@ -277,6 +293,7 @@ void stopServer() {
     mType = -1;
     mRPtr = mLoopBuf;
     mWPtr = mLoopBuf;
+    mClientStop = true;
     if (mLoopBuf != NULL) {
         free(mLoopBuf);
         mLoopBuf = NULL;
@@ -301,7 +318,7 @@ void getDataBySkt(char *buf, int size) {
 
 int getInfoBySkt(int type) {
     int ret = -1;
-    //ALOGI("[getInfo]mTotal:%d, mStartPts:%d,mType:%d\n", mTotal, mStartPts, mType);
+    //ALOGV("[getInfo]type:%d ,mTotal:%d, mStartPts:%d,mType:%d\n", type,mTotal, mStartPts, mType);
     switch (type) {
         case 1:
             ret = mTotal;
@@ -313,13 +330,13 @@ int getInfoBySkt(int type) {
             ret = mType;
             break;
     }
-    //ALOGI("[getInfo]type:%d, ret:%d\n", type, ret);
+    //ALOGV("[getInfo]type:%d, ret:%d\n", type, ret);
     return ret;
 }
 
 void getPcrscrBySkt(char* pcrStr) {
     int64_t pcr = mTimeUs/1000*90 + mStartPts;
-    sprintf(pcrStr, "0x%x", pcr);
+    sprintf(pcrStr, "0x%llx", pcr);
 
-    //ALOGI("[getPcrscr]pcr:%x, pcrStr:%s\n",pcr, pcrStr);
+    //ALOGV("[getPcrscr]pcr:%x, pcrStr:%s\n",pcr, pcrStr);
 }

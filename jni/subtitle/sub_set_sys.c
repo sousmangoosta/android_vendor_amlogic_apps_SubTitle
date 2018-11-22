@@ -4,12 +4,8 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: c file
 */
-/****************************************
- * file: sub_set_sys.c
- * description: set sys attr when
-****************************************/
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

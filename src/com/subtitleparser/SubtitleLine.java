@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: java file
 */
 package com.subtitleparser;
 
@@ -62,10 +62,10 @@ public class SubtitleLine {
         }
 
         //add support pixmap: get w, h,source,and then change to Bitmap
-        public Bitmap curBitmap() {
+        /*public Bitmap curBitmap() {
             //call jni
-            return Bitmap.createBitmap(0, 0, Bitmap.Config.ARGB_8888);
-        }
+            return Bitmap.createBitmap (null);
+        }*/
         public SubtitleTime getBegin() {
             return begin;
         }

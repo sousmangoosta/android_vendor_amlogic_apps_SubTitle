@@ -4,15 +4,14 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: c file
 */
 #define LOG_TAG "amavutils"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <string.h>
+#include <strings.h>
 #include <cutils/log.h>
 #include <sys/ioctl.h>
 #include "Amsysfsutils.h"
@@ -190,13 +189,11 @@ int amsysfs_set_sysfs_int(const char *path, int val)
 
 int amsysfs_get_sysfs_int(const char *path)
 {
-    char bcmd[32] = {0};
+    char bcmd[32] = "";
     int val = 0;
     if (amSystemControlReadSysfs(path, bcmd) == 0)
     {
-        if (strlen(bcmd) > 0) {
-            val = strtol(bcmd, NULL, 10);
-        }
+        val = strtol(bcmd, NULL, 10);
     }
     return val;
 }

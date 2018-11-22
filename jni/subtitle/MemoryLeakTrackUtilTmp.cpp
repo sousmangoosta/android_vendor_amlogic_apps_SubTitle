@@ -34,7 +34,6 @@
 namespace android
 {
 
-#if defined(__VNDK_NOSO__)
 //#if defined(__arm__)
 
     extern "C" void get_malloc_leak_info(uint8_t **info,
@@ -78,7 +77,7 @@ namespace android
 
     void dumpMemoryAddresses(int fd)
     {
-        const size_t SIZE = 256;
+        /*const size_t SIZE = 256;
         char buffer[SIZE];
         MyString8 result;
         typedef struct
@@ -177,13 +176,13 @@ namespace android
             delete[]entries;
             free_malloc_leak_info(info);
         }
-        write(fd, result.string(), result.size());
+        write(fd, result.string(), result.size());*/
     }
 
-#else
+//#else
     // Does nothing
-    void dumpMemoryAddresses(int fd)
-    {
-    }
-#endif
+    //void dumpMemoryAddresses(int fd)
+    //{
+    //}
+//#endif
 }               // namespace android

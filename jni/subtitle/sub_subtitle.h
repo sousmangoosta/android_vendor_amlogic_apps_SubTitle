@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: h file
 */
 #ifndef SUBTITLE_H
 #define SUBTITLE_H
@@ -78,7 +78,7 @@ unsigned char spu_fill_pixel(unsigned short *pixelIn, char *pixelOut,
                              AML_SPUVAR *sub_frame, int n);
 int add_sub_end_time(int end_time);
 int subtitle_thread_create();
-int init_subtitle_file();
+int init_subtitle_file(int need_close);
 int close_subtitle();
 void set_subthread(int runing);
 int write_subtitle_file(AML_SPUVAR *spu);

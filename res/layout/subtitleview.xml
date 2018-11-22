@@ -11,11 +11,11 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="50dp">
     </com.subtitleview.SubtitleView>
-    <com.subtitleview.CcSubView
-        android:id="@+id/ccsubtitle"
+    <com.tv.DTVSubtitleView
+        android:id="@+id/tvsubtitle"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_above="@+id/subtitle">
-    </com.subtitleview.CcSubView>
+    </com.tv.DTVSubtitleView>
 </RelativeLayout>

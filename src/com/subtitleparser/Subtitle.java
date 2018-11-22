@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: java file
 */
 package com.subtitleparser;
 
@@ -69,8 +69,10 @@ public class Subtitle {
         private static SubtitleApi subapi = null;
         private int index = 0;
         private static String systemCharset = "GBK";
-        static {;
+        static {
+                Log.i("Subtitle","[subtitle]-3-");
                 System.loadLibrary ("subjni");
+                Log.i("Subtitle","[subtitle]-4-");
                }
 
         public Subtitle() {  }

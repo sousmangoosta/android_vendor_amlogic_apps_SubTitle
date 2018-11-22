@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: h file
 */
 #ifndef LIST_HEADERS_H
 #define LIST_HEADERS_H

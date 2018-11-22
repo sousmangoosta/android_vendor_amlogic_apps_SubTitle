@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: h file
 */
 #ifndef _SUBTITLE_SET_DISP_H_
 #define _SUBTITLE_SET_DISP_H_

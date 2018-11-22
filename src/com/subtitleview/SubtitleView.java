@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: java file
 */
 package com.subtitleview;
 
@@ -50,6 +50,8 @@ public class SubtitleView extends FrameLayout {
         private String mFont = null;
         Typeface mSimSun;
         Typeface mSimHei;
+
+        private static Object mLock = new Object();
 
         //add for pgs show
         private SubData dataPgsA = null;
@@ -574,11 +576,16 @@ public class SubtitleView extends FrameLayout {
         }
 
         public void startSocketServer() {
-            SubManager.getinstance().startSocketServer();
+            synchronized(mLock) {
+                SubManager.getinstance().startSocketServer();
+            }
+
         }
 
         public void stopSocketServer() {
-            SubManager.getinstance().stopSocketServer();
+            synchronized(mLock) {
+                SubManager.getinstance().stopSocketServer();
+            }
         }
 
         public void setIOType(int type) {

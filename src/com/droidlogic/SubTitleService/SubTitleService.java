@@ -4,7 +4,7 @@
 * This source code is subject to the terms and conditions defined in the
 * file 'LICENSE' which is part of this source code package.
 *
-* Description:
+* Description: java file
 */
 package com.droidlogic.SubTitleService;
 
@@ -30,7 +30,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.graphics.*;
 import com.subtitleparser.*;
 import com.subtitleview.SubtitleView;
-import com.subtitleview.CcSubView;
+import com.tv.TvSubtitle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -55,6 +55,7 @@ import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.ISubTitleService;
 
 public class SubTitleService extends ISubTitleService.Stub {
+    private String langCharset = "GBK";
     private static final String TAG = "SubTitleService";
     private static final String SUBTITLE_WIN_TITLE = "com.droidlogic.subtitle.win";
     private static final String DISPLAY_MODE_SYSFS = "/sys/class/display/mode";
@@ -76,11 +77,12 @@ public class SubTitleService extends ISubTitleService.Stub {
     private static final int LOAD = 0xFD;
 
     private static final int SET_IO_TYPE = 0xFE;
-    private static final int CCSTART = 0xE1;
-    private static final int CCSTOP = 0xE2;
+    private static final int TV_SUB_START = 0xE1;
+    private static final int TV_SUB_STOP = 0xE2;
 
     private static final int SUB_OFF = 0;
     private static final int SUB_ON = 1;
+    private static final int SUB_HIDE = 2;
     private int subShowState = SUB_OFF;
 
     private boolean mDebug = SystemProperties.getBoolean("sys.subtitleService.debug", true);
@@ -90,6 +92,9 @@ public class SubTitleService extends ISubTitleService.Stub {
     private WindowManager mWindowManager;
     private WindowManager.LayoutParams mWindowLayoutParams;
     private boolean isViewAdded = false;
+
+    //avoid close continuously
+    private boolean mIsClosed = false;
 
     //for subtitle
     private SubtitleUtils mSubtitleUtils;
@@ -111,10 +116,8 @@ public class SubTitleService extends ISubTitleService.Stub {
     private int mTextSize = 20;
     private int mBottomMargin = 50; //should sync with SubtitleView.xml
 
-    //ccsubtitleview
-    private CcSubView ccSubView = null;
-    private boolean isccrunning = false;
-    private boolean mCCSupport = false;
+    //tv subtitle
+    private TvSubtitle mTvSubtitle = null;
 
     public SubTitleService(Context context) {
         LOGI("[SubTitleService]");
@@ -126,9 +129,16 @@ public class SubTitleService extends ISubTitleService.Stub {
         if (mDebug) Log.i(TAG, msg);
     }
 
+    private boolean supportTvSubtile() {
+        boolean ret = false;
+        ret = SystemProperties.getBoolean("sys.subtitleService.tv.debug", false);
+        return ret;
+    }
+
     private void init() {
+        LOGI("[init]");
         //get system control
-        mSystemControl = new SystemControlManager(mContext);
+        //mSystemControl = new SystemControlManager(mContext);
 
         //init view
         mSubView = LayoutInflater.from(mContext).inflate(R.layout.subtitleview, null);
@@ -138,10 +148,6 @@ public class SubTitleService extends ISubTitleService.Stub {
         subTitleView.setTextSize(20);
         subTitleView.setTextStyle(Typeface.NORMAL);
         subTitleView.setViewStatus(true);
-        mCCSupport = SystemProperties.getBoolean("sys.subtitleService.ccsupport", false);
-        if (mCCSupport) {
-            ccSubView = (CcSubView) mSubView.findViewById(R.id.ccsubtitle);
-        }
 
         new Thread(new Runnable() {
             public void run() {
@@ -170,8 +176,8 @@ public class SubTitleService extends ISubTitleService.Stub {
         LOGI("[addView]isViewAdded:" + isViewAdded);
         if (!isViewAdded) {
             if (SystemProperties.getBoolean("sys.subtitleservice.enableview", true)) {
-                mWindowManager.addView(mSubView, mWindowLayoutParams);
                 isViewAdded = true;
+                mWindowManager.addView(mSubView, mWindowLayoutParams);
             }
         }
     }
@@ -179,17 +185,19 @@ public class SubTitleService extends ISubTitleService.Stub {
     private void removeView() {
         LOGI("[removeView]isViewAdded:" + isViewAdded);
         if (isViewAdded) {
-            mWindowManager.removeView(mSubView);
             isViewAdded = false;
+            mWindowManager.removeView(mSubView);
         }
     }
 
     public void open (String path) {
         LOGI("[open] path: " + path);
+        mIsClosed = false;
         if (mOptionDialog != null) {
             mOptionDialog.dismiss();
         }
-        StartCcSub();
+
+        StartTvSub();
         if (path != null && !path.equals("")) {
             File file = new File(path);
             String name = file.getName();
@@ -203,12 +211,12 @@ public class SubTitleService extends ISubTitleService.Stub {
         }
 
         mSubTotal = mSubtitleUtils.getSubTotal();
-        mCurSubId = mSubtitleUtils.getCurrentInSubtitleIndexByJni(); //get inner subtitle current index as default, 0 is always, if there is no inner subtitle, 0 indicate the first external subtitle
+        //mCurSubId = mSubtitleUtils.getCurrentInSubtitleIndexByJni(); //get inner subtitle current index as default, 0 is always, if there is no inner subtitle, 0 indicate the first external subtitle
         if (mSetSubId >= 0) {
             mCurSubId = mSetSubId;
             mSetSubId = -1;
         }
-        LOGI("[open] mCurSubId: " + mCurSubId);
+        LOGI("[open] mCurSubId: " + mCurSubId+ ",mSubTotal:"+mSubTotal);
         if (mSubTotal > 0) {
             sendOpenMsg(mCurSubId);
         }
@@ -217,23 +225,45 @@ public class SubTitleService extends ISubTitleService.Stub {
         //sendOptionMsg();
     }
 
+    class StopSubSocketThread extends Thread {
+        public void run() {
+            synchronized(this) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        subTitleView.stopSocketServer();
+                        if (mSubTotal > 0) {
+                            subTitleView.stopSubThread(); //close insub parse thread
+                            subTitleView.closeSubtitle();
+                            subTitleView.clear();
+                        }
+                    }
+                });
+            }
+        }
+     }
+
+
     public void close() {
         LOGI("[close]");
-        StopCcSub();
+        if (supportTvSubtile() && mTvSubtitle != null)
+            StopTvSub();
+
+        //flag mIsClosed replace flag subShowState, otherwise result to 168720
+        if (mIsClosed)
+            return;
+        mIsClosed = true;
+
         if (mSubtitleUtils != null) {
-            mSubtitleUtils.setSubtitleNumber(0);
+            //mSubtitleUtils.setSubtitleNumber(0);
             mSubtitleUtils = null;
         }
-
-        new Thread(new Runnable() {
-            public void run() {
-                subTitleView.stopSocketServer();
-            }
-        }).start();
-
+        new StopSubSocketThread().start();
+        removeView();
         mSubTotal = -1;
         mSetSubId = -1;
-        sendCloseMsg();
+        subShowState = SUB_OFF;
+        mRatioSet = false;
     }
 
     public int getSubTotal() {
@@ -385,7 +415,6 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     public String getSubLanguage(int idx) {
-        LOGI("[getSubLanguage]idx:" + idx);
         String language = null;
         int index = 0;
 
@@ -411,51 +440,28 @@ public class SubTitleService extends ISubTitleService.Stub {
                 language = getSubName(idx);
             }
         }
-        LOGI("[getSubLanguage] idx:" + idx + ",language:" + language);
         return language;
     }
 
-    public void StartCcSub() {
-        if (mCCSupport) {
-            sendStartCcSubMsg();
+    public void StartTvSub() {
+        if (supportTvSubtile() && mTvSubtitle == null) {
+            mTvSubtitle = new TvSubtitle(mContext, mSubView);
+            sendStartTvSubMsg();
         }
     }
 
-    public void StopCcSub() {
-        if (mCCSupport) {
-            sendStopCcSubMsg();
-        }
+    public void StopTvSub() {
+        sendStopTvSubMsg();
     }
 
-    private void sendStartCcSubMsg() {
-        Message msg = mHandler.obtainMessage(CCSTART);
+    private void sendStartTvSubMsg() {
+        Message msg = mHandler.obtainMessage(TV_SUB_START);
         mHandler.sendMessage(msg);
     }
 
-    private void sendStopCcSubMsg() {
-        Message msg = mHandler.obtainMessage(CCSTOP);
+    private void sendStopTvSubMsg() {
+        Message msg = mHandler.obtainMessage(TV_SUB_STOP);
         mHandler.sendMessage(msg);
-    }
-
-    private void ccStart() {
-        if (!isccrunning && mCCSupport) {
-            LOGI("cc subtitle start");
-            ccSubView.startCC();
-            ccSubView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-            ccSubView.show();
-            ccSubView.setActive(true);
-            isccrunning = true;
-        }
-    }
-
-    private void ccStop() {
-        if (isccrunning && mCCSupport) {
-            LOGI("cc subtitle stop");
-            isccrunning = false;
-            ccSubView.hide();
-            ccSubView.setActive(false);
-            ccSubView.stopCC();
-        }
     }
 
     private void sendOpenMsg(int idx) {
@@ -615,7 +621,7 @@ public class SubTitleService extends ISubTitleService.Stub {
         boolean ret = false;
         final String urlPath = path; // for subtitle which should download from net
 
-        if ((path.startsWith("http://") || path.startsWith("https://")) && (path.endsWith("xml"))) {
+        if ((path.startsWith("http://") || path.startsWith("https://")) /*&& (path.endsWith("xml"))*/) {
             ret = true; // url subtitle return true
             Runnable r = new Runnable() {
                 public void run() {
@@ -650,7 +656,7 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     public void setSurfaceViewParam(int x, int y, int w, int h) {
-        String mode = mSystemControl.readSysFs(DISPLAY_MODE_SYSFS).replaceAll("\n","");
+        /*String mode = mSystemControl.readSysFs(DISPLAY_MODE_SYSFS).replaceAll("\n","");
         int[] curPosition = mSystemControl.getPosition(mode);
         int modeW = curPosition[2];
         int modeH = curPosition[3];
@@ -687,7 +693,7 @@ public class SubTitleService extends ISubTitleService.Stub {
 
         // update text subtitle size
         setTextSize((int)(mTextSize * mRatio));
-        LOGI("[setSurfaceViewParam]mRatio:" + mRatio + ", mTextSize:" + mTextSize);
+        LOGI("[setSurfaceViewParam]mRatio:" + mRatio + ", mTextSize:" + mTextSize);*/
     }
 
     private void adjustImgRatioDft() {
@@ -742,9 +748,10 @@ public class SubTitleService extends ISubTitleService.Stub {
         mRatioSet = true;
     }
 
-    private String setSublanguage() {
+    /*public String setSublanguage(String able) {///
+        LOGI("[setSublanguage] able: " + able);
         String type = null;
-        String able = mContext.getResources().getConfiguration().locale.getCountry();
+        ///String able = mContext.getResources().getConfiguration().locale.getCountry();
         if (able.equals("TW")) {
             type = "BIG5";
         } else if (able.equals("JP")) {
@@ -760,21 +767,30 @@ public class SubTitleService extends ISubTitleService.Stub {
         } else {
             type = "GBK";
         }
+        LOGI("[setSublanguage] type: " + type);
         return type;
+    }*/
+
+    public void setSublanguage(String type) {
+        langCharset = type;
+        sendOpenMsg(mCurSubId);
+        ///SubID subID1 = mSubtitleUtils.getSubID(mCurSubId);
     }
 
     private void openFile(SubID subID) {
-        LOGI("[openFile] subID: " + subID);
+        Log.e(TAG, "[openFile]subID.index:"+subID.index);
         if (subID == null) {
             return;
         }
-
+        Log.e(TAG, "[openFile]--2---:");
         try {
-            if (subTitleView.setFile(subID, setSublanguage()) == Subtitle.SUBTYPE.SUB_INVALID) {
+            ///String able = mContext.getResources().getConfiguration().locale.getCountry();
+            if (subTitleView.setFile(subID, langCharset) == Subtitle.SUBTYPE.SUB_INVALID) {
                 return;
             }
+            Log.e(TAG, "[openFile]--3---:");
             if (mSubtitleUtils != null) {
-                mSubtitleUtils.setSubtitleNumber(subID.index);
+                //mSubtitleUtils.setSubtitleNumber(subID.index);
             }
         } catch (Exception e) {
             Log.e(TAG, "open:error");
@@ -784,8 +800,8 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     @Override
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
-        /*LOGI("[dump]fd:" + fd.getInt$() + ",mSubtitleUtils:" + mSubtitleUtils);
-        if (mSubtitleUtils != null) {
+        //LOGI("[dump]fd:" + fd.getInt$() + ",mSubtitleUtils:" + mSubtitleUtils);
+        /*if (mSubtitleUtils != null) {
             mSubtitleUtils.nativeDump(fd.getInt$());
         }*/
     }
@@ -793,11 +809,10 @@ public class SubTitleService extends ISubTitleService.Stub {
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage (Message msg) {
-            LOGI("[handleMessage]msg.what:" + msg.what + ",msg.arg1:" + msg.arg1 + ",subShowState:" + subShowState);
 
             switch (msg.what) {
                 case SHOW_CONTENT:
-                    if (subShowState == SUB_ON) {
+                    if (subShowState == SUB_ON && mSubTotal > 0) {
                         addView();
                         adjustImgRatioDft();
                         subTitleView.tick (msg.arg1);
@@ -857,10 +872,10 @@ public class SubTitleService extends ISubTitleService.Stub {
                 case HIDE:
                     if (View.VISIBLE == subTitleView.getVisibility()) {
                         subTitleView.setVisibility (View.GONE);
-                        subShowState = SUB_OFF;
+                        subShowState = SUB_HIDE;
                     }
-                    if (mCCSupport) {
-                        ccSubView.hide();
+                    if (supportTvSubtile() && mTvSubtitle != null) {
+                        mTvSubtitle.hide();
                     }
                     break;
 
@@ -869,8 +884,8 @@ public class SubTitleService extends ISubTitleService.Stub {
                         subTitleView.setVisibility (View.VISIBLE);
                         subShowState = SUB_ON;
                     }
-                    if (mCCSupport) {
-                        ccSubView.show();
+                    if (supportTvSubtile() && mTvSubtitle != null) {
+                        mTvSubtitle.show();
                     }
                     break;
 
@@ -896,7 +911,8 @@ public class SubTitleService extends ISubTitleService.Stub {
                     }
 
                     try {
-                        subTitleView.loadSubtitleFile((String)msg.obj, setSublanguage());
+                        ///String able = mContext.getResources().getConfiguration().locale.getCountry();
+                        subTitleView.loadSubtitleFile((String)msg.obj, langCharset);
                         subShowState = SUB_ON;
                     } catch (Exception e) {
                         Log.e(TAG, "load:error");
@@ -907,14 +923,18 @@ public class SubTitleService extends ISubTitleService.Stub {
                 case SET_IO_TYPE:
                     subTitleView.setIOType(msg.arg1);
 
-                case CCSTART:
-                    addView();
-                    ccStart();
+                case TV_SUB_START:
+                    if (supportTvSubtile() && mTvSubtitle != null) {
+                        addView();
+                        mTvSubtitle.start(0);
+                    }
                     break;
 
-               case CCSTOP:
-                    ccStop();
-                    removeView();
+               case TV_SUB_STOP:
+                    if (supportTvSubtile() && mTvSubtitle != null) {
+                        removeView();
+                        mTvSubtitle.stop();
+                    }
                     break;
 
                 default:
