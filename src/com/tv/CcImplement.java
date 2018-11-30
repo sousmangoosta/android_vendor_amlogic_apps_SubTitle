@@ -87,7 +87,7 @@ public class CcImplement {
         path1 = new Path();
         path2 = new Path();
 
-        mSystemControlManager = new SystemControlManager(context);
+        mSystemControlManager = SystemControlManager.getInstance();
 
         if (cf != null)
         {
