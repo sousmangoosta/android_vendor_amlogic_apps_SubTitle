@@ -106,13 +106,13 @@ public class CcImplement {
 
     private boolean isStyle_use_broadcast()
     {
-        int style_setting = 0;
-        try {
+        int style_setting = 1;
+        /*try {
             style_setting = Settings.Secure.getInt(context.getContentResolver(), "accessibility_captioning_style_enabled");
         } catch (Settings.SettingNotFoundException e) {
             Log.w(TAG, e.toString());
             style_setting = 0;
-        }
+        }*/
         /* 0 for broadcast 1 for using caption manager */
         if (style_setting == 1)
             return false;
@@ -318,7 +318,7 @@ public class CcImplement {
             }
             try {
                 video_h_v_rate_origin = Integer.valueOf(ratio.split("0x")[1], 16);
-//                Log.d(TAG, "ratio: " + video_h_v_rate_origin);
+                Log.d(TAG, "ratio: " + video_h_v_rate_origin);
             } catch (Exception e) {
                 //0x90 means 16:9 a fallback value
                 video_h_v_rate_origin = 0x90;
@@ -556,6 +556,7 @@ public class CcImplement {
                     return;
                 }
                 ccVersion = ccObj.getString("type");
+                Log.i(TAG, "[CaptionWindow]ccVersion:" + ccVersion);
                 if (ccVersion.matches("cea608"))
                 {
                     windowArr = ccObj.getJSONArray("windows");
@@ -564,6 +565,7 @@ public class CcImplement {
                     windows = new Window[windows_count+1];
                     for (int i=0; i<windows_count; i++)
                         windows[i] = new Window(windowArr.getJSONObject(i));
+                    Log.i(TAG, "[CaptionWindow]-1--");
                 }
                 else if (ccVersion.matches("cea708"))
                 {
@@ -658,7 +660,7 @@ public class CcImplement {
                     display_effect = windowStr.getString("display_effect");
                     effect_direction = windowStr.getString("effect_direction");
                     effect_speed = windowStr.getInt("effect_speed");
-                    heart_beat = windowStr.getInt("heart_beat");
+                    //heart_beat = windowStr.getInt("heart_beat");
                 } catch (Exception e) {
                     Log.e(TAG, "window property exception " + e.toString());
                     init_flag = false;
@@ -701,9 +703,9 @@ public class CcImplement {
                     } else if (fill_opacity.equalsIgnoreCase("translucent")){
                         fill_opacity_int = 0x80;
                     } else if (fill_opacity.equalsIgnoreCase("flash")) {
-                        if (heart_beat == 0)
+                        /*if (heart_beat == 0)
                             fill_opacity_int = 0;
-                        else
+                        else*/
                             fill_opacity_int = 0xff;
                     } else
                         fill_opacity_int = 0xff;
@@ -774,11 +776,12 @@ public class CcImplement {
 
                     window_start_y = caption_screen.getWindowLeftTopY(anchor_relative, anchor_v, anchor_point, row_count);
 
-//                dump();
+                    dump();
             }
 
             void draw(Canvas canvas)
             {
+                Log.d(TAG, "[draw]=====ccVersion:"+ccVersion);
                 /* Draw window */
                 if (ccVersion.equalsIgnoreCase("cea708")) {
                     double columns_width;
@@ -812,7 +815,7 @@ public class CcImplement {
                     window_paint.setAlpha(fill_opacity_int);
                 }
                 canvas.drawRect((float) window_left, (float) window_top, (float) window_right, (float) window_bottom, window_paint);
-//                Log.e(TAG, "window rect " + window_left + " " + window_right + " " + window_top + " " + window_bottom);
+                Log.e(TAG, "window rect " + window_left + " " + window_right + " " + window_top + " " + window_bottom);
 
 
                 /* Draw rows */
@@ -1217,9 +1220,9 @@ public class CcImplement {
                             } else if (bg_opacity.equalsIgnoreCase("translucent")){
                                 bg_opacity_int = 0x80;
                             } else if (bg_opacity.equalsIgnoreCase("flash")) {
-                                if (heart_beat == 0)
+                                /*if (heart_beat == 0)
                                     bg_opacity_int = 0;
-                                else
+                                else*/
                                     bg_opacity_int = 0xff;
                             }
                             setDrawerConfig(data, font_style, font_size, font_scale,
@@ -1454,9 +1457,9 @@ public class CcImplement {
                         paint.reset();
                         if (style_use_broadcast) {
                             if (opacity.equalsIgnoreCase("flash")) {
-                                if (heart_beat == 0)
+                                /*if (heart_beat == 0)
                                     return;
-                                else
+                                else*/
                                     opacity_int = 0xff;
                             }
                         }
@@ -1534,6 +1537,7 @@ public class CcImplement {
                 Log.e(TAG, "Init failed, skip draw");
                 return;
             }
+            Log.d(TAG, "[draw]-windows_count:"+windows_count);
             for (int i = windows_count - 1; i >= 0; i--)
                 windows[i].draw(canvas);
         }

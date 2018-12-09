@@ -17,10 +17,11 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <jni.h>
+#include <string.h>
 #include <android/log.h>
 #include <cutils/properties.h>
 
-#include <android/bitmap.h>
+//#include <android/bitmap.h>
 
 
 extern "C" {
@@ -300,13 +301,13 @@ error:
 
     static void json_update_cb(AM_CC_Handle_t handle)
     {
+        LOGE("[json_update_cb]");
         TVSubtitleData *sub = (TVSubtitleData *)AM_CC_GetUserData(handle);
         JNIEnv *env;
         int ret;
         jstring data;
         int attached = 0;
         ret = gJavaVM->GetEnv((void **) &env, JNI_VERSION_1_4);
-
         if (ret < 0) {
             ret = gJavaVM->AttachCurrentThread(&env, NULL);
             if (ret < 0) {
@@ -315,7 +316,6 @@ error:
             }
             attached = 1;
         }
-
         data = env->NewStringUTF(gJsonStr);
         env->CallVoidMethod(sub->obj, gPassJsonStr, data);
         env->DeleteLocalRef(data);

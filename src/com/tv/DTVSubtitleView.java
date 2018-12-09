@@ -157,12 +157,12 @@ public class DTVSubtitleView extends View {
     private native static int native_sub_set_atsc_cc_options(int fg_color, int fg_opacity, int bg_color, int bg_opacity, int font_style, int font_size);
     private native int native_sub_set_active(boolean active);
 
-    /*static {
+    static {
         System.loadLibrary("am_adp");
         System.loadLibrary("am_mw");
         System.loadLibrary("zvbi");
         System.loadLibrary("tvsubtitle_tv");
-    }*/
+    }
 
     /**
      * DVB subtitle param
@@ -349,7 +349,7 @@ public class DTVSubtitleView extends View {
                 if (native_sub_init() < 0) {
                 }
 
-                //setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
                 cf = new CustomFonts(getContext());
                 if (ci == null) {
@@ -414,7 +414,7 @@ public class DTVSubtitleView extends View {
      */
     public DTVSubtitleView(Context context) {
         super(context);
-        //init();
+        init();
     }
 
     /**
@@ -422,7 +422,7 @@ public class DTVSubtitleView extends View {
      */
     public DTVSubtitleView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        //init();
+        init();
     }
 
     /**
@@ -430,7 +430,7 @@ public class DTVSubtitleView extends View {
      */
     public DTVSubtitleView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        //init();
+        init();
     }
 
     /**
@@ -452,6 +452,7 @@ public class DTVSubtitleView extends View {
      * @param active y/n
      */
     public void setActive(boolean active) {
+        Log.d(TAG, "[setActive]active:"+active);
         synchronized (lock) {
             if (active && (activeView != this) && (activeView != null)) {
                 activeView.stopDecoder();
@@ -845,11 +846,12 @@ public class DTVSubtitleView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        //ci.caption_screen.updateCaptionScreen(w, h);
+        ci.caption_screen.updateCaptionScreen(w, h);
     }
 
     @Override
     public void onDraw(Canvas canvas) {
+        Log.d(TAG, "[onDraw]");
         Rect sr;
         if (!active || !visible || (play_mode == PLAY_NONE)) {
             /* Clear canvas */
@@ -861,7 +863,6 @@ public class DTVSubtitleView extends View {
         }
         if (!ci.cc_setting.is_enabled)
             return;
-
         if (play_mode == PLAY_TT || sub_params.mode == MODE_DTV_TT || sub_params.mode == MODE_ATV_TT) {
             sr = new Rect(0, 0, 12 * 41, 10 * 25);
         } else if (play_mode == PLAY_SUB) {
@@ -869,7 +870,6 @@ public class DTVSubtitleView extends View {
         } else {
             sr = new Rect(0, 0, BUFFER_W, BUFFER_H);
         }
-
         if (cw != null) {
             cw.draw(canvas);
             cw = null;
@@ -915,9 +915,10 @@ public class DTVSubtitleView extends View {
     };
 
     public void saveJsonStr(String str) {
+        Log.d(TAG, "[saveJsonStr]str:" + str);
         if (activeView != this)
             return;
-
+        Log.d(TAG, "[saveJsonStr]-1-");
         if (!TextUtils.isEmpty(str)) {
             handler.obtainMessage(JSON_MSG_NORMAL, ci.new CaptionWindow(str)).sendToTarget();
         }

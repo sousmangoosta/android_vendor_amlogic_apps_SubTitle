@@ -16,41 +16,28 @@ LOCAL_MODULE    := libtvsubtitle_tv
 LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := DTVSubtitle.cpp
 LOCAL_ARM_MODE := arm
+LOCAL_CFLAGS += -DSUPPORT_ADTV
+LOCAL_CFLAGS += -DUSE_VENDOR_ICU
 LOCAL_C_INCLUDES := external/libzvbi/src \
   $(DVB_PATH)/include/am_mw \
   $(DVB_PATH)/include/am_adp \
   bionic/libc/include \
   external/skia/include\
   $(DVB_PATH)/android/ndk/include \
-  vendor/amlogic/common/external/libzvbi/src
+  vendor/amlogic/common/external/libzvbi/src \
+  $(JNI_H_INCLUDE) \
 
-LOCAL_SHARED_LIBRARIES += libjnigraphics libzvbi libam_mw libam_adp  liblog libcutils
+
+LOCAL_SHARED_LIBRARIES += libzvbi libam_mw libam_adp  liblog libcutils
 
 LOCAL_PRELINK_MODULE := false
 
-#include $(BUILD_SHARED_LIBRARY)
-
-#######################################################################
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE    := libjnivendorfont
-LOCAL_PRELINK_MODULE := false
-LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-LOCAL_MODULE_SUFFIX := .so
-LOCAL_MODULE_TAGS := optional
-
-ifdef TARGET_2ND_ARCH
-LOCAL_MULTILIB := both
-LOCAL_MODULE_PATH_64 := $(TARGET_OUT)/lib64
-LOCAL_SRC_FILES_64 := arm64/libjnivendorfont.so
-LOCAL_MODULE_PATH_32 := $(TARGET_OUT)/lib
-LOCAL_SRC_FILES_32 := arm/libjnivendorfont.so
-else
-LOCAL_MODULE_PATH := $(TARGET_OUT)/lib
-LOCAL_SRC_FILES := arm/libjnivendorfont.so
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+LOCAL_PROPRIETARY_MODULE := true
 endif
-#include $(BUILD_PREBUILT)
+
+include $(BUILD_SHARED_LIBRARY)
+
 
 #######################################################################
 
@@ -60,8 +47,18 @@ LOCAL_MODULE    := libjnifont_tv
 LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := Fonts.cpp
 LOCAL_ARM_MODE := arm
-LOCAL_C_INCLUDES := $(JNI_H_INCLUDE)
-LOCAL_SHARED_LIBRARIES += libjnivendorfont liblog libnativehelper libandroid_runtime libcutils
+
+LOCAL_C_INCLUDES := \
+    $(JNI_H_INCLUDE) \
+    libnativehelper/include_jni \
+    system/core/libutils/include \
+    system/core/liblog/include \
+    libnativehelper/include/nativehelper
+LOCAL_SHARED_LIBRARIES += libvendorfont  liblog  libcutils
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+LOCAL_PROPRIETARY_MODULE := true
+endif
 
 LOCAL_PRELINK_MODULE := false
 

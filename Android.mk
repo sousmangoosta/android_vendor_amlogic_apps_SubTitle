@@ -31,7 +31,7 @@ endif
 LOCAL_PACKAGE_NAME := SubTitle
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := droidlogic
-LOCAL_REQUIRED_MODULES := libsubjni
+LOCAL_REQUIRED_MODULES := libsubjni libtvsubtitle_tv libjnifont_tv
 
 include $(BUILD_PACKAGE)
 include $(call all-makefiles-under,$(LOCAL_PATH))

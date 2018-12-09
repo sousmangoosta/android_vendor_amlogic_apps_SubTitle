@@ -1,19 +1,19 @@
 /*
-* Copyright (c) 2014 Amlogic, Inc. All rights reserved.
-*
-* This source code is subject to the terms and conditions defined in the
-* file 'LICENSE' which is part of this source code package.
-*
-* Description: c++ file
-*/
+ * Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+ *
+ * This source code is subject to the terms and conditions defined in the
+ * file 'LICENSE' which is part of this source code package.
+ *
+ * Description: C++ file
+ */
+
 #include <syslog.h>
 #include "vendor_font_util.h"
 #include "Fonts.h"
 #include <utils/Log.h>
-#include <nativehelper/jni.h>
 #include <jni.h>
-#include <nativehelper/JNIHelp.h>
-#include <android_runtime/AndroidRuntime.h>
+//#include <nativehelper/JNIHelp.h>
+//#include <android_runtime/AndroidRuntime.h>
 
 using namespace android;
 
@@ -50,11 +50,20 @@ static JNINativeMethod gMethods[] =
 
 int register_com_droidlogic_tvinput_TvApplication_FileUtils(JNIEnv *env)
 {
-    static const char *const kClassPathName = "com/droidlogic/tvinput/TvApplication$FileUtils";
+    jint rc;
+    static const char *const kClassPathName = "com/droidlogic/SubTitleService/TvApplication$FileUtils";
     jclass clazz;
     FIND_CLASS(clazz, kClassPathName);
-    return jniRegisterNativeMethods(env, kClassPathName, gMethods, sizeof(gMethods) / sizeof(gMethods[0]));
+
+    if (rc = (env->RegisterNatives(clazz, gMethods, sizeof(gMethods) / sizeof(gMethods[0]))) < 0) {
+        env->DeleteLocalRef(clazz);
+        return -1;
+    }
+
+    env->DeleteLocalRef(clazz);
+    return 0;
 }
+
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
     JNIEnv *env = NULL;
@@ -64,7 +73,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     {
         goto bail;
     }
-    assert(env != NULL);
+    //assert(env != NULL);
 
 
     if (register_com_droidlogic_tvinput_TvApplication_FileUtils(env) < 0)

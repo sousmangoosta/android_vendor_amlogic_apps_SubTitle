@@ -21,7 +21,7 @@ import com.tv.DTVSubtitleView;
 public class TvSubtitle {
     private static final String TAG = "TvSubtitle";
     private Context mContext;
-    private boolean mDebug = SystemProperties.getBoolean("sys.subtitleService.tv.debug", true);
+    private boolean mDebug = SystemProperties.getBoolean("vendor.sys.subtitleService.tv.debug", true);
 
     private DTVSubtitleView mTvSubtitleView = null;
     private CaptioningManager mCaptioningManager = null;
@@ -53,12 +53,12 @@ public class TvSubtitle {
         }
     }
 
-    public void start(int pid) {
+    public void start(int vfmt, int pid) {
         LOGI("[start] pid:" + pid + ", mTvSubtitleView:" + mTvSubtitleView);
         if (mTvSubtitleView != null) {
             enableSubtitleShow(true);
             mTvSubtitleView.stop();
-            setParam(pid);
+            setParam(vfmt, pid);
             mTvSubtitleView.setActive(true);
             mTvSubtitleView.startSub();
         }
@@ -88,10 +88,10 @@ public class TvSubtitle {
         }
     }
 
-    private void setParam(int pid) {
+    private void setParam(int vfmt, int pid) {
         CCStyleParams ccParam = getCaptionStyle();
         DTVSubtitleView.DTVCCParams params =
-            new DTVSubtitleView.DTVCCParams(2,pid,
+            new DTVSubtitleView.DTVCCParams(vfmt, pid,
                 ccParam.fg_color,
                 ccParam.fg_opacity,
                 ccParam.bg_color,
@@ -152,7 +152,7 @@ public class TvSubtitle {
 
         String[] typeface = mContext.getResources().getStringArray(R.array.captioning_typeface_selector_values);
         CaptioningManager.CaptionStyle userStyle = mCaptioningManager.getUserStyle();
-        int style = 0;//mCaptioningManager.getRawUserStyle();
+        int style = 0; //mCaptioningManager.getRawUserStyle();
         float textSize = mCaptioningManager.getFontScale();
         int fg_color = userStyle.foregroundColor & 0x00ffffff;
         int fg_opacity = userStyle.foregroundColor & 0xff000000;
