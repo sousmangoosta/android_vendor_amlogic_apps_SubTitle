@@ -335,8 +335,8 @@ int getInfoBySkt(int type) {
 }
 
 void getPcrscrBySkt(char* pcrStr) {
-    int64_t pcr = mTimeUs/1000*90 + mStartPts;
-    sprintf(pcrStr, "0x%llx", pcr);
+    int pcr = mTimeUs/1000*90 + mStartPts;
+    sprintf(pcrStr, "0x%x", pcr);
 
     //ALOGV("[getPcrscr]pcr:%x, pcrStr:%s\n",pcr, pcrStr);
 }
