@@ -763,10 +763,10 @@ public class SubTitleService extends ISubTitleService.Stub {
         mRatioSet = true;
     }
 
-    /*public String setSublanguage(String able) {///
-        LOGI("[setSublanguage] able: " + able);
+    public String setSublanguage() {
         String type = null;
-        ///String able = mContext.getResources().getConfiguration().locale.getCountry();
+        String able = mContext.getResources().getConfiguration().locale.getCountry();
+        LOGI("[setSublanguage] able: " + able);
         if (able.equals("TW")) {
             type = "BIG5";
         } else if (able.equals("JP")) {
@@ -779,18 +779,24 @@ public class SubTitleService extends ISubTitleService.Stub {
             type = "cp1254";
         } else if (able.equals("PC")) {
             type = "cp1098";// "cp1097";
+        } else if (able.equals("EG")) {
+            type = "CP1256";
+        } else if (able.equals("PT")) {
+            type = "cp1252";
+        } else if (able.equals("IL")) {
+            type = "Windows-1255";
         } else {
             type = "GBK";
         }
         LOGI("[setSublanguage] type: " + type);
         return type;
-    }*/
+    }
 
-    public void setSublanguage(String type) {
+    /*public void setSublanguage(String type) {
         langCharset = type;
         sendOpenMsg(mCurSubId);
         ///SubID subID1 = mSubtitleUtils.getSubID(mCurSubId);
-    }
+    }*/
 
     private void openFile(SubID subID) {
         Log.e(TAG, "[openFile]subID.index:"+subID.index);
@@ -800,7 +806,7 @@ public class SubTitleService extends ISubTitleService.Stub {
         Log.e(TAG, "[openFile]--2---:");
         try {
             ///String able = mContext.getResources().getConfiguration().locale.getCountry();
-            if (subTitleView.setFile(subID, langCharset) == Subtitle.SUBTYPE.SUB_INVALID) {
+            if (subTitleView.setFile(subID, setSublanguage()) == Subtitle.SUBTYPE.SUB_INVALID) {
                 return;
             }
             Log.e(TAG, "[openFile]--3---:");
@@ -927,7 +933,7 @@ public class SubTitleService extends ISubTitleService.Stub {
 
                     try {
                         ///String able = mContext.getResources().getConfiguration().locale.getCountry();
-                        subTitleView.loadSubtitleFile((String)msg.obj, langCharset);
+                        subTitleView.loadSubtitleFile((String)msg.obj, setSublanguage());
                         subShowState = SUB_ON;
                     } catch (Exception e) {
                         Log.e(TAG, "load:error");

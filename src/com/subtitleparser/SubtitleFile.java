@@ -338,6 +338,7 @@ public class SubtitleFile extends LinkedList {
             return hasGBK;
         }
         public void appendSubtitle (int index, int start, int end, byte[] bytearray, String encode1) {
+            Log.d ("subtitleFile", "[appendSubtitle]encode1:"+encode1);
             //public int appendSubtitle(int index) {
             String encode = encode1;
             if (encode.compareTo ("UTF-16LE") == 0 || encode.compareTo ("UTF-16BE") == 0) {
@@ -364,7 +365,6 @@ public class SubtitleFile extends LinkedList {
                     encode = ISO88591S;
                 }
             }
-
             try {
                 text = new String (bytearray, encode);
             }

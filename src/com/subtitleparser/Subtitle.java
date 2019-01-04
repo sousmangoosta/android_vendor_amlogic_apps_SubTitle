@@ -279,6 +279,9 @@ public class Subtitle {
         }
 
         private static String checkEncoding (String fileName, String enc) {
+            if ("CP1256".equals(enc)) {
+                return "CP1256";
+            }
             BufferedInputStream bis = null;
             FileInputStream fin = null;
             byte[] first3Bytes = new byte[3];
