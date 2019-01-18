@@ -119,9 +119,10 @@ public class SubTitleService extends ISubTitleService.Stub {
     //tv subtitle
     private TvSubtitle mTvSubtitle = null;
 
-    private static final int TV_SUB_MPEG2 = 0;
-    private static final int TV_SUB_H264 = 2;
-    private int vfmt = TV_SUB_H264;
+    private static final int TV_SUB_NONE = -1;
+    private static final int TV_SUB_MPEG2 = 0;  //close caption mpeg2
+    private static final int TV_SUB_H264 = 2;    //close caption h264
+    private int vfmt = TV_SUB_NONE;
 
     public SubTitleService(Context context) {
         LOGI("[SubTitleService]");
@@ -135,19 +136,23 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     private boolean supportTvSubtile() {
         boolean ret = false;
+        vfmt = SystemProperties.getInt("vendor.sys.subtitleService.tvType", -1);
+        if (vfmt != TV_SUB_H264 && vfmt != TV_SUB_MPEG2) {
+            return false;
+        }
         ret = SystemProperties.getBoolean("vendor.sys.subtitleService.enableTv", true);
         return ret;
     }
 
-    private void setTvSubtitleType() {
+    /*private void setTvSubtitleType() {
         int ret;
-        ret = SystemProperties.getInt("vendor.sys.subtitleService.tvType", 2);
+        ret = SystemProperties.getInt("vendor.sys.subtitleService.tvType", -1);
         if (ret == 2) {
             vfmt = TV_SUB_H264;
         } else if (ret == 0) {
             vfmt = TV_SUB_MPEG2;
         }
-    }
+    }*/
 
     private void init() {
         LOGI("[init]");
@@ -459,7 +464,7 @@ public class SubTitleService extends ISubTitleService.Stub {
 
     public void StartTvSub() {
         if (supportTvSubtile() && mTvSubtitle == null) {
-            setTvSubtitleType();
+            //setTvSubtitleType();
             mTvSubtitle = new TvSubtitle(mContext, mSubView);
             sendStartTvSubMsg();
         }
