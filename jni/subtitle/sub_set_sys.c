@@ -52,14 +52,8 @@ int get_subtitle_enable()
 int get_subtitle_num()
 {
     int ret = 0;
-
-    if (getIOType() == IO_TYPE_DEV) {
-        ret = get_sysfs_int("/sys/class/subtitle/total");
-    }
-    else if (getIOType() == IO_TYPE_SOCKET) {
-        ret = getInfo(TYPE_TOTAL);
-    }
-
+    //avoid setIOType later, p use only IO_TYPE_SOCKET.
+    ret = getInfo(TYPE_TOTAL);
     return ret;
 }
 
