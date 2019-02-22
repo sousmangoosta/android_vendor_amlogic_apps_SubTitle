@@ -911,12 +911,12 @@ int read_subtitle_file()
 int get_inter_spu_packet(int pts)
 {
     lp_lock(&sublock);
-    LOGI(" search pts %x , s %x \n", pts, pts / 90);
+    LOGI(" search pts %d , s %d \n", pts, pts / 90);
     int storenumber =
         (file_position >=
          read_position) ? file_position - read_position : sublen +
         file_position - 1 - read_position;
-    LOGI("inter_subtitle_data[%d].subtitle_pts is %x storenumber=%d end_time %x\n", read_position, inter_subtitle_data[read_position].subtitle_pts, storenumber, inter_subtitle_data[read_position].subtitle_delay_pts);
+    LOGI("inter_subtitle_data[%d].subtitle_pts is %d storenumber=%d end_time %d\n", read_position, inter_subtitle_data[read_position].subtitle_pts, storenumber, inter_subtitle_data[read_position].subtitle_delay_pts);
     int i;
     for (i = 0; i < storenumber - 1; i++)
     {
@@ -935,7 +935,7 @@ int get_inter_spu_packet(int pts)
                 ADD_SUBTITLE_POSITION(read_position);
             for (i = 0; i < storenumber - 2; i++)
             {
-                LOGI("get_inter_spu_packet  pts discontinue read_position is %d  file_position is %d, tmp_read_position is %d, tmp_read_position pts is 0x%x\n", read_position, file_position, tmp_read_position, inter_subtitle_data[read_position].subtitle_pts);
+                LOGI("get_inter_spu_packet  pts discontinue read_position is %d  file_position is %d, tmp_read_position is %d, tmp_read_position pts is %d\n", read_position, file_position, tmp_read_position, inter_subtitle_data[read_position].subtitle_pts);
                 if (pts >=
                         inter_subtitle_data[tmp_read_position].
                         subtitle_pts)

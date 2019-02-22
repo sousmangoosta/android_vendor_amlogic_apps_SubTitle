@@ -1197,14 +1197,15 @@ static void dvbsub_parse_clut_segment(const uint8_t *buf, int buf_size)
     clut_id = *buf++;
     buf += 1;
     clut = get_clut(ctx, clut_id);
-    if (!clut)
-    {
+
+    if (!clut) {
         clut = av_malloc(sizeof(DVBSubCLUT));
-        if (!clut)
-            LOGE("[%s::%d]malloc error! \n", __FUNCTION__,
-                 __LINE__);
-        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n",
-             __FUNCTION__, __LINE__, clut, sizeof(DVBSubCLUT));
+        if (!clut) {
+            LOGE("[%s::%d]malloc error! \n", __FUNCTION__, __LINE__);
+            return;
+        }
+        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n", __FUNCTION__, __LINE__, clut, sizeof(DVBSubCLUT));
+
         memcpy(clut, &default_clut, sizeof(DVBSubCLUT));
         clut->id = clut_id;
         clut->next = ctx->clut_list;
@@ -1235,8 +1236,11 @@ static void dvbsub_parse_clut_segment(const uint8_t *buf, int buf_size)
             alpha = (buf[1] << 6) & 0xc0;
             buf += 2;
         }
-        if (y == 0)
+        if (y == 0) {
+            cr = 0;
+            cb = 0;
             alpha = 0xff;
+        }
         YUV_TO_RGB1_CCIR(cb, cr);
         YUV_TO_RGB2_CCIR(r, g, b, y);
         LOGE("clut %d := (%d,%d,%d,%d)\n", entry_id, r, g, b, alpha);
@@ -1265,11 +1269,12 @@ static void dvbsub_parse_region_segment(const uint8_t *buf, int buf_size)
     if (!region)
     {
         region = av_mallocz(sizeof(DVBSubRegion));
-        if (!region)
-            LOGE("[%s::%d]malloc error! \n", __FUNCTION__,
-                 __LINE__);
-        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n",
-             __FUNCTION__, __LINE__, region, sizeof(DVBSubRegion));
+        if (!region) {
+            LOGE("[%s::%d]malloc error! \n", __FUNCTION__, __LINE__);
+            return;
+        }
+        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n", __FUNCTION__, __LINE__, region, sizeof(DVBSubRegion));
+
         region->id = region_id;
         region->next = ctx->region_list;
         ctx->region_list = region;
@@ -1307,10 +1312,12 @@ static void dvbsub_parse_region_segment(const uint8_t *buf, int buf_size)
         region->depth = 4;
     }
     region->clut = *buf++;
-    if (region->depth == 8)
+
+    if (region->depth == 8) {
         region->bgcolor = *buf++;
-    else
-    {
+        buf += 1;
+
+    } else {
         buf += 1;
         if (region->depth == 4)
             region->bgcolor = (((*buf++) >> 4) & 15);
@@ -1344,12 +1351,12 @@ static void dvbsub_parse_region_segment(const uint8_t *buf, int buf_size)
         }
         object->type = (*buf) >> 6;
         display = av_mallocz(sizeof(DVBSubObjectDisplay));
-        if (!display)
-            LOGE("[%s::%d]malloc error! \n", __FUNCTION__,
-                 __LINE__);
-        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n",
-             __FUNCTION__, __LINE__, display,
-             sizeof(DVBSubObjectDisplay));
+        if (!display) {
+            LOGE("[%s::%d]malloc error! \n", __FUNCTION__, __LINE__);
+            return;
+        }
+        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n", __FUNCTION__, __LINE__, display, sizeof(DVBSubObjectDisplay));
+
         display->object_id = object_id;
         display->region_id = region_id;
         display->x_pos = AV_RB16(buf) & 0xfff;
@@ -1367,6 +1374,7 @@ static void dvbsub_parse_region_segment(const uint8_t *buf, int buf_size)
         display->object_list_next = object->display_list;
         object->display_list = display;
     }
+    return;
 }
 
 static void dvbsub_parse_page_segment(const uint8_t *buf, int buf_size)
@@ -1406,12 +1414,12 @@ static void dvbsub_parse_page_segment(const uint8_t *buf, int buf_size)
         }
         if (!display)
             display = av_mallocz(sizeof(DVBSubRegionDisplay));
-        if (!display)
-            LOGE("[%s::%d]malloc error! \n", __FUNCTION__,
-                 __LINE__);
-        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n",
-             __FUNCTION__, __LINE__, display,
-             sizeof(DVBSubObjectDisplay));
+        if (!display) {
+            LOGE("[%s::%d]malloc error! \n", __FUNCTION__, __LINE__);
+            return;
+        }
+        LOGI("@@[%s::%d]av_malloc ptr = 0x%x, size = %d\n", __FUNCTION__, __LINE__, display, sizeof(DVBSubObjectDisplay));
+
         display->region_id = region_id;
         display->x_pos = AV_RB16(buf);
         buf += 2;
@@ -1458,8 +1466,9 @@ static void save_display_set(DVBSubContext *ctx, AML_SPUVAR *spu)
     for (display = ctx->display_list; display; display = display->next)
     {
         region = get_region(ctx, display->region_id);
-        if (x_pos == -1)
-        {
+        if (!region)
+            return;
+        if (x_pos == -1) {
             x_pos = display->x_pos;
             y_pos = display->y_pos;
             width = region->width;
@@ -1472,10 +1481,18 @@ static void save_display_set(DVBSubContext *ctx, AML_SPUVAR *spu)
                 width += (x_pos - display->x_pos);
                 x_pos = display->x_pos;
             }
-            if (display->y_pos < y_pos)
-            {
-                height += (y_pos - display->y_pos);
-                y_pos = display->y_pos;
+
+            if (display->y_pos < y_pos) {
+                // avoid different region bitmap cross;20150906 bug111420
+                if (y_pos - display->y_pos < region->height) {
+                    height += region->height;
+                    y_pos = y_pos - region->height;
+                    display->y_pos = y_pos;
+                } else {
+                    height += (y_pos - display->y_pos);
+                    y_pos = display->y_pos;
+                }
+
             }
             if (display->x_pos + region->width > x_pos + width)
             {
@@ -1518,6 +1535,8 @@ static void save_display_set(DVBSubContext *ctx, AML_SPUVAR *spu)
         {
             unsigned check_err = 0;
             region = get_region(ctx, display->region_id);
+            if (!region)
+                return;
             x_off = display->x_pos - x_pos;
             y_off = display->y_pos - y_pos;
             clut = get_clut(ctx, region->clut);
@@ -1536,51 +1555,26 @@ static void save_display_set(DVBSubContext *ctx, AML_SPUVAR *spu)
                     clut_table = clut->clut16;
                     break;
             }
+
             LOGI("@@[%s::%d]x_off = %d, y_off = %d, width = %d, height = %d, region->width = %d, region->height = %d\n", __FUNCTION__, __LINE__, x_off, y_off, width, height, region->width, region->height);
-            check_err =
-                (region->height - 1 + y_off) * width * 4 + (x_off +
-                        region->width
-                        -
-                        1) * 4 +
-                3;
-            if ((check_err >= DVB_SUB_SIZE)
-                    || (region->height > 1080)
-                    || (region->width > 1920))
-            {
-                LOGI("@@[%s::%d] sub data err!! check_err = %d\n", __FUNCTION__, __LINE__, check_err);
+            check_err = (region->height - 1 + y_off) * width * 4 + (x_off + region->width - 1) * 4 + 3;
+            if ((check_err >= DVB_SUB_SIZE) || (region->height > 1080) || (region->width > 1920)) {
+                LOGI("@@[%s::%d] sub data err!! check_err = %d\n", __FUNCTION__, __LINE__,check_err);
                 return;
             }
-            for (y = 0; y < region->height; y++)
-            {
-                for (x = 0; x < region->width; x++)
-                {
-                    pbuf[((y + y_off) * width) + x_off +
-                         x] =
-                             clut_table[region->pbuf
-                                        [y * region->width + x]];
-                    spu->spu_data[((y +
-                                    y_off) * width * 4) +
-                                  (x_off + x) * 4] =
-                                      (pbuf
-                                       [((y + y_off) * width) + x_off +
-                                        x] >> 24) & 0xff;
-                    spu->spu_data[((y +
-                                    y_off) * width * 4) +
-                                  (x_off + x) * 4 + 1] =
-                                      (pbuf
-                                       [((y + y_off) * width) + x_off +
-                                        x] >> 16) & 0xff;
-                    spu->spu_data[((y +
-                                    y_off) * width * 4) +
-                                  (x_off + x) * 4 + 2] =
-                                      (pbuf
-                                       [((y + y_off) * width) + x_off +
-                                        x] >> 8) & 0xff;
-                    spu->spu_data[((y +
-                                    y_off) * width * 4) +
-                                  (x_off + x) * 4 + 3] =
-                                      pbuf[((y + y_off) * width) + x_off +
-                                           x] & 0xff;
+
+            for (y = 0; y < region->height; y++) {
+                for (x = 0; x < region->width; x++) {
+                    pbuf[((y + y_off) * width) + x_off + x] =
+                        clut_table[region->pbuf[y * region->width + x]];
+                    spu->spu_data[((y + y_off) * width * 4) + (x_off + x) * 4] =
+                        pbuf[((y + y_off) * width) + x_off + x] & 0xff;
+                    spu->spu_data[((y + y_off) * width * 4) + (x_off + x) * 4 + 1] =
+                        (pbuf[((y + y_off) * width) + x_off + x] >> 8) & 0xff;
+                    spu->spu_data[((y + y_off) * width * 4) + (x_off + x) * 4 + 2] =
+                        (pbuf[((y + y_off) * width) + x_off + x] >> 16) & 0xff;
+                    spu->spu_data[((y + y_off) * width * 4) + (x_off + x) * 4 + 3] =
+                        (pbuf[((y + y_off) * width) + x_off + x] >> 24) & 0xff;
                 }
             }
             dvb_sub_valid_flag = 1;
@@ -1635,10 +1629,11 @@ static void dvbsub_parse_display_definition_segment(const uint8_t *buf,
     display_def->height = bytestream_get_be16(&buf) + 1;
     LOGI("-[%s],display_def->width=%d,height=%d,info_byte=%d,buf_size=%d--\n",__FUNCTION__,
         display_def->width,display_def->height,info_byte,buf_size);
-    if (buf_size < 13)
-        return;
+
     if (info_byte & 1 << 3) // display_window_flag
     {
+        if (buf_size < 13)
+            return;
         display_def->x = bytestream_get_be16(&buf);
         display_def->y = bytestream_get_be16(&buf);
         display_def->width =
@@ -1646,6 +1641,7 @@ static void dvbsub_parse_display_definition_segment(const uint8_t *buf,
         display_def->height =
             bytestream_get_be16(&buf) - display_def->y + 1;
     }
+    return;
 }
 
 static int dvbsub_display_end_segment(AML_SPUVAR *spu, const uint8_t *buf,
