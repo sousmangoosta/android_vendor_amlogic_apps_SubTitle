@@ -61,7 +61,8 @@ public class Subtitle {
             SUB_COMMONTXT,
             SUB_LRC,
             SUB_XML,
-            INSUB
+            INSUB,
+            SUB_XML2
         }
         private String filename = null;
         private String charset = null;
@@ -224,6 +225,11 @@ public class Subtitle {
                     Log.i ("SubtitleFile", "--XmlSubParser--:" + fileName);
                     //input = FileIO.file2string(fileName, encoding);
                     sp = new XmlSubParser (encoding);
+                    return sp.parse (fileName, index);
+                case SUB_XML2:
+                    Log.i ("SubtitleFile", "--Xml2SubParser--:" + fileName);
+                    //input = FileIO.file2string(fileName, encoding);
+                    sp = new Xml2SubParser (encoding);
                     return sp.parse (fileName, index);
                 case SUB_SAMI:
                     //          input = FileIO.file2string(fileName, encoding);

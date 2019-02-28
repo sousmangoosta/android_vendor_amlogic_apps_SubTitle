@@ -96,6 +96,7 @@ public class FileIO {
             Pattern SUBRIP9_Pattern = Pattern.compile ("\\[\\d+:\\d+:\\d+\\]");
             Pattern LRC_Pattern = Pattern.compile ("\\[\\d+:\\d+.\\d+\\]" + "(.*?)");
             Pattern XML_Pattern = Pattern.compile ("<Subtitle>");
+            Pattern XML_Pattern2 = Pattern.compile ("<tt xml:lang=");
             Matcher matcher = null;
             int i = 0;
             int idx = 0;
@@ -191,6 +192,11 @@ public class FileIO {
                         matcher = XML_Pattern.matcher (line);
                         if (matcher.find()) {
                             type = Subtitle.SUBTYPE.SUB_XML;
+                            break;
+                        }
+                        matcher = XML_Pattern2.matcher (line);
+                        if (matcher.find()) {
+                            type = Subtitle.SUBTYPE.SUB_XML2;
                             break;
                         }
                         matcher = JACOSUB_Pattern.matcher (line);
