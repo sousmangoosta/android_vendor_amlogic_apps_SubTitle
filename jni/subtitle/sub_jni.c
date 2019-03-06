@@ -275,8 +275,9 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
     }
     LOGE("start get packet\n\n");
     int sub_pkt;
-    if (get_inter_spu_type() == SUBTITLE_DVB)
+    if (get_inter_spu_type() == SUBTITLE_DVB  || get_inter_spu_type() == SUBTITLE_DVB_TELETEXT)
     {
+        //LOGE("start get packet msec:%d, pts:%d\n",msec,msec * 90);
         sub_pkt = get_inter_spu_packet(msec * 90);
     }
     else if (get_inter_spu_type())
@@ -381,7 +382,7 @@ JNIEXPORT jobject JNICALL getrawdata(JNIEnv *env, jclass cl, jint msec)
         }
         return obj;
     }
-    else if (get_inter_spu_type() == SUBTITLE_DVB)
+    else if (get_inter_spu_type() == SUBTITLE_DVB || get_inter_spu_type() == SUBTITLE_DVB_TELETEXT)
     {
         LOGE("getrawdata: get_inter_spu_type()=SUBTITLE_DVB");
         int sub_size = get_inter_spu_size();

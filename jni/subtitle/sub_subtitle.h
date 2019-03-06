@@ -27,6 +27,8 @@
 #define SUBTITLE_SSA  5     //add yjf
 #define SUBTITLE_DVB  6
 #define SUBTITLE_TMD_TXT 7
+#define SUBTITLE_IDX_SUB 8
+#define SUBTITLE_DVB_TELETEXT 9
 
 #define SUB_INIT        0
 #define SUB_PLAYING     1
@@ -70,6 +72,7 @@ typedef struct
     unsigned rgba_pattern2;
     unsigned rgba_pattern3;
 } AML_SPUVAR;
+
 
 int get_spu(AML_SPUVAR *spu, int sub_fd);
 int release_spu(AML_SPUVAR *spu);

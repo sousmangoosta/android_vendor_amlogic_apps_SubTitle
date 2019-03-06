@@ -69,6 +69,7 @@ public class SubtitleView extends FrameLayout {
         private final int SUBTITLE_PGS = 2;
         private final int SUBTITLE_DVB = 6;
         private final int SUBTITLE_TMD_TXT = 7;
+        private final int SUBTITLE_DVB_TELETEXT = 9;
         public void setGraphicSubViewMode (int flag) {
             graphicViewMode = flag;
         }
@@ -505,7 +506,7 @@ public class SubtitleView extends FrameLayout {
         /*if((getSubTypeDetial() == 0) ||(getSubTypeDetial() == -1)) {
             return;
         }
-        else */if (getSubTypeDetial() == SUBTITLE_PGS || getSubTypeDetial() == SUBTITLE_DVB || getSubTypeDetial() == SUBTITLE_TMD_TXT) {
+        else */if (getSubTypeDetial() == SUBTITLE_PGS || getSubTypeDetial() == SUBTITLE_DVB || getSubTypeDetial() == SUBTITLE_TMD_TXT || getSubTypeDetial() == SUBTITLE_DVB_TELETEXT) {
             Log.i(TAG,"[tick]data:"+data+",dataPgsAValid:"+dataPgsAValid+",dataPgsBValid:"+dataPgsBValid+",modifytime:"+modifytime);
             if (data == null) {
                     if (dataPgsAValid == false) {

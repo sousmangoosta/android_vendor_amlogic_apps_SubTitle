@@ -26,6 +26,7 @@
 #include "sub_dvb_sub.h"
 #include "sub_pgs_sub.h"
 #include "sub_set_sys.h"
+#include "sub_teletextdec.h"
 
 #include "sub_io.h"
 
@@ -395,6 +396,21 @@ int get_spu(AML_SPUVAR *spu, int read_sub_fd)
         }
         size = getSize(read_sub_fd);
         LOGI("end dvb buffer size %d\n", size);
+        return 0;
+    } else if (get_subtitle_subtype() == 9) { //SUBTITLE_DVB_TELETEXT
+        sublen = 50;
+        size = getSize(read_sub_fd);
+        LOGI("start dvb teletext buffer size %d\n", size);
+        int ret_spu = get_dvb_teletext_spu(spu, read_sub_fd);
+        if (ret_spu == -1)
+        {
+            close_subtitle();
+            teletext_init_decoder();
+            subtitle_status = SUB_INIT;
+            restlen = 0;
+        }
+        size = getSize(read_sub_fd);
+        LOGI("end dvb teletext buffer size %d\n", size);
         return 0;
     }
     size = getSize(read_sub_fd);
@@ -800,6 +816,7 @@ int init_subtitle_file(int need_close)
     init_pgs_subtitle();
     dvbsub_init_decoder();
     dvdsub_init_decoder();
+    teletext_init_decoder();
     subtitle_status = SUB_INIT;
     restlen = 0;
     return 0;
@@ -888,6 +905,18 @@ int write_subtitle_file(AML_SPUVAR *spu)
             inter_subtitle_data[file_position].spu_origin_display_h,inter_subtitle_data[file_position].spu_start_x,
             inter_subtitle_data[file_position].spu_start_y);
         inter_subtitle_type = SUBTITLE_DVB;
+        file_position = ADD_SUBTITLE_POSITION(file_position);
+    }
+    else if(spu->subtitle_type == SUBTITLE_DVB_TELETEXT){
+        inter_subtitle_data[file_position].spu_origin_display_w = spu->spu_origin_display_w;
+        inter_subtitle_data[file_position].spu_origin_display_h = spu->spu_origin_display_h;
+        inter_subtitle_data[file_position].spu_start_x = spu->spu_start_x;
+        inter_subtitle_data[file_position].spu_start_y = spu->spu_start_y;
+
+        LOGI("spu_origin_display[%d,%d],start[%d,%d]-\n",inter_subtitle_data[file_position].spu_origin_display_w,
+            inter_subtitle_data[file_position].spu_origin_display_h,inter_subtitle_data[file_position].spu_start_x,
+            inter_subtitle_data[file_position].spu_start_y);
+        inter_subtitle_type = SUBTITLE_DVB_TELETEXT;
         file_position = ADD_SUBTITLE_POSITION(file_position);
     }
     else if (spu->subtitle_type == SUBTITLE_TMD_TXT)
@@ -1028,6 +1057,18 @@ int get_inter_spu_size()
         return inter_subtitle_data[read_position].data_size / 4;
     }
     else if (get_inter_spu_type() == SUBTITLE_DVB)
+    {
+        int subtitle_width =
+            inter_subtitle_data[read_position].subtitle_width;
+        int subtitle_height =
+            inter_subtitle_data[read_position].subtitle_height;
+        if (subtitle_width * subtitle_height == 0)
+            return 0;
+        int buffer_width = (subtitle_width + 63) & 0xffffffc0;
+        LOGI("## subtitle width is %d: subtitle height is %d, buffer width is %d, size=%d,\n", subtitle_width, subtitle_height, buffer_width, buffer_width * subtitle_height);
+        return buffer_width * subtitle_height;
+    }
+    else if (get_inter_spu_type() == SUBTITLE_DVB_TELETEXT)
     {
         int subtitle_width =
             inter_subtitle_data[read_position].subtitle_width;
@@ -1463,6 +1504,7 @@ int close_subtitle()
     }
     dvbsub_close_decoder();
     close_pgs_subtitle();
+    teletext_close_decoder();
     if (restbuf)
     {
         free(restbuf);
