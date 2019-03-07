@@ -256,7 +256,7 @@ void child_connect(int sockfd) {
                     | recvBuf[7];
             //ALOGV("child recv, mTimeUs:%d\n", mTimeUs);
         }
-        else/* if (recvBuf[0] == 'A' && recvBuf[1] == 'M' && recvBuf[2] == 'L') */{
+        else if (recvBuf[0] != 'S' && recvBuf[1] != 'T' && recvBuf[2] != 'Y' && recvBuf[3] != 'P') {
             safeCopy(mLoopBuf, recvBuf, retLen);
         }
 

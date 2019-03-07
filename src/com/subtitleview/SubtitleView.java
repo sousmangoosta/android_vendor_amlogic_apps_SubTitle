@@ -37,6 +37,7 @@ public class SubtitleView extends FrameLayout {
         private boolean needSubTitleShow = true;
         private int timeoffset = 400;
         private SubData data = null;
+        private SubData data2 = null;
         private int graphicViewMode = 0;
         private float wscale = 1.000f;
         private float hscale = 1.000f;
@@ -45,11 +46,16 @@ public class SubtitleView extends FrameLayout {
         private ImageView mImageView = null;
         private TextView mTextView = null;
 
+        //for ssa two line with same pts
+        private String ssaTextStr = null;
+
         //for font
         Context mContext;
         private String mFont = null;
         Typeface mSimSun;
         Typeface mSimHei;
+
+        boolean isInnerSub = false;
 
         private static Object mLock = new Object();
 
@@ -249,6 +255,11 @@ public class SubtitleView extends FrameLayout {
                             this.addView (mImageView);
                         }
                     } else {
+                        if (mTextView != null && ssaTextStr != null) {
+                            mTextView.setText (ssaTextStr);
+                            this.addView (mTextView);
+                            //ssaTextStr = null;
+                        }
                         String sttmp = data.getSubString();
                         if (sttmp != null) {
                             sttmp = sttmp.replaceAll ("\r", "");
@@ -269,6 +280,7 @@ public class SubtitleView extends FrameLayout {
         }
 
         public void redraw() {
+            //Log.i(TAG, "[redraw]");
             this.removeAllViews();
             stopOsdTimeout();
             if (data != null) {
@@ -280,7 +292,13 @@ public class SubtitleView extends FrameLayout {
                         this.addView (mImageView);
                     }
                 } else {
-                    String sttmp = data.getSubString();
+                    if (mTextView != null && ssaTextStr != null) {
+                        //Log.i(TAG,"[getDataStr]ssaTextStr:"+ ssaTextStr);
+                        mTextView.setText (ssaTextStr);
+                        this.addView (mTextView);
+                    }
+
+                    /*String sttmp = data.getSubString();
                     sttmp = sttmp.replaceAll ("\r", "");
                     byte sttmp_2[] = sttmp.getBytes();
                     if (sttmp_2.length > 0 && 0 == sttmp_2[ sttmp_2.length - 1]) {
@@ -296,8 +314,9 @@ public class SubtitleView extends FrameLayout {
                             mTextView.setTypeface(mSimSun);
                         }
                         mTextView.setText (new String (sttmp_2) );
+                        Log.i(TAG, "[redraw]---1---");
                         this.addView (mTextView);
-                    }
+                    }*/
                 }
             }
             startSubShowTimeout();
@@ -482,6 +501,7 @@ public class SubtitleView extends FrameLayout {
         }
 
         int modifytime = millisec + timeoffset;
+        Log.i (TAG, "[tick]modifytime:" + modifytime );
         /*if((getSubTypeDetial() == 0) ||(getSubTypeDetial() == -1)) {
             return;
         }
@@ -529,19 +549,63 @@ public class SubtitleView extends FrameLayout {
                 }
             } else {
                 if (data != null) {
+                    //Log.i(TAG,"[tick]beginTime:"+ data.beginTime() + ",endTime:" +  data.endTime());
                     if ((modifytime >= data.beginTime()) && (modifytime <= data.endTime())) {
                         if (getVisibility() == View.GONE) {
                             return ;
                         }
                     } else {
                         data = SubManager.getinstance().getSubData (modifytime);
+                        if (isInnerSub) {
+                            data2 = SubManager.getinstance().getSubData (modifytime);      //for same pts, there are two subData for solve TV-2749
+                        }
+                        getDataStr(data,data2);
                     }
                 } else {
                     data = SubManager.getinstance().getSubData (modifytime);
+                    if (isInnerSub) {
+                        data2 = SubManager.getinstance().getSubData (modifytime);
+                    }
+
+                    getDataStr(data,data2);
                 }
                 redraw();
             }
         }
+
+        public void getDataStr (SubData data,SubData data2) {
+            if (data != null) {
+                if (data.gettype() == 0) {
+                    String sttmp = data.getSubString();
+                    sttmp = sttmp.replaceAll ("\r", "");
+                    byte sttmp_2[] = sttmp.getBytes();
+                    if (sttmp_2.length > 0 && 0 == sttmp_2[ sttmp_2.length - 1]) {
+                        sttmp_2[ sttmp_2.length - 1] = 0x20;
+                    }
+                    if (data2 != null) {
+                        if (data.beginTime() == data2.beginTime()) {
+                            String sttmp2 = data2.getSubString();
+                            sttmp2 = sttmp2.replaceAll ("\r", "");
+                            byte sttmp_22[] = sttmp2.getBytes();
+                            if (sttmp_22.length > 0 && 0 == sttmp_22[ sttmp_22.length - 1]) {
+                                sttmp_22[ sttmp_22.length - 1] = 0x20;
+                            }
+                            ssaTextStr = new String (sttmp_22) + "\n" + new String (sttmp_2);
+                        } else {
+                            ssaTextStr = new String (sttmp_2);
+                        }
+                    } else {
+                        ssaTextStr = new String (sttmp_2);
+                    }
+                }
+            }
+        }
+
+        public void setInnerSub (boolean isSub) {
+            Log.i(TAG, "[setInnerSub]isSub:" + isSub);
+            isInnerSub= isSub;
+        }
+
 
         public void setDelay (int milsec) {
             timeoffset = milsec;

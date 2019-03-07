@@ -920,9 +920,8 @@ int get_inter_spu_packet(int pts)
     int i;
     for (i = 0; i < storenumber - 1; i++)
     {
-        if (pts >=
-                inter_subtitle_data[ADD_SUBTITLE_POSITION(read_position)].
-                subtitle_pts)
+        if (pts >= inter_subtitle_data[ADD_SUBTITLE_POSITION(read_position)].subtitle_pts
+            && (inter_subtitle_data[read_position].subtitle_pts != inter_subtitle_data[ADD_SUBTITLE_POSITION(read_position)].subtitle_pts))
             read_position = ADD_SUBTITLE_POSITION(read_position);
         else
             break;

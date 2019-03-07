@@ -291,11 +291,17 @@ public class SubTitleService extends ISubTitleService.Stub {
     }
 
     public int getInnerSubTotal() {
-        return mSubtitleUtils.getInSubTotal();
+        if (mSubtitleUtils != null) {
+            return mSubtitleUtils.getInSubTotal();
+        }
+        return 0;
     }
 
     public int getExternalSubTotal() {
-        return mSubtitleUtils.getExSubTotal();
+        if (mSubtitleUtils != null) {
+            return mSubtitleUtils.getExSubTotal();
+        }
+        return 0;
     }
 
     public void nextSub() { // haven't test
@@ -328,6 +334,17 @@ public class SubTitleService extends ISubTitleService.Stub {
         } else {
             mSetSubId = idx;
         }
+    }
+
+    public boolean isInnerSub() {
+        boolean ret = false;
+        if (getSubTotal() > 0) {
+            if (getInnerSubTotal() > 0 && mCurSubId < getInnerSubTotal()) {
+                ret = true;
+            }
+        }
+        LOGI("[isInnerSub]ret:" + ret);
+        return ret;
     }
 
     public void showSub(int position) {
@@ -841,6 +858,7 @@ public class SubTitleService extends ISubTitleService.Stub {
                     if (subShowState == SUB_ON && mSubTotal > 0) {
                         addView();
                         adjustImgRatioDft();
+                        subTitleView.setInnerSub(isInnerSub());
                         subTitleView.tick (msg.arg1);
                     }
                     break;
