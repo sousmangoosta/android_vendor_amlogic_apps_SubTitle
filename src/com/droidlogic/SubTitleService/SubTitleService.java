@@ -195,8 +195,8 @@ public class SubTitleService extends ISubTitleService.Stub {
         LOGI("[addView]isViewAdded:" + isViewAdded);
         if (!isViewAdded) {
             if (SystemProperties.getBoolean("sys.subtitleservice.enableview", true)) {
-                isViewAdded = true;
                 mWindowManager.addView(mSubView, mWindowLayoutParams);
+                isViewAdded = true;
             }
         }
     }
@@ -204,8 +204,8 @@ public class SubTitleService extends ISubTitleService.Stub {
     private void removeView() {
         LOGI("[removeView]isViewAdded:" + isViewAdded);
         if (isViewAdded) {
-            isViewAdded = false;
             mWindowManager.removeView(mSubView);
+            isViewAdded = false;
         }
     }
 
