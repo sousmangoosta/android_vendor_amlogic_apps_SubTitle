@@ -256,6 +256,8 @@ public class SubTitleService extends ISubTitleService.Stub {
                             subTitleView.closeSubtitle();
                             subTitleView.clear();
                         }
+                        removeView();
+                        mSubTotal = -1;
                     }
                 });
             }
@@ -278,8 +280,6 @@ public class SubTitleService extends ISubTitleService.Stub {
             mSubtitleUtils = null;
         }
         new StopSubSocketThread().start();
-        removeView();
-        mSubTotal = -1;
         mSetSubId = -1;
         subShowState = SUB_OFF;
         mRatioSet = false;
