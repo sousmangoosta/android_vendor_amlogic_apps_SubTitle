@@ -1104,7 +1104,7 @@ static int dvbsub_parse_pixel_data_block(DVBSubObjectDisplay *display,
             default:
                 LOGI("[%s::%d] Unknown/unsupported pixel block 0x%x\n",
                      __FUNCTION__, __LINE__, *(buf - 1));
-                return -1;
+                break;                       //when account for unknown pixel block, don't discard current segment. SWPL-7481
         }
     }
     return 0;
