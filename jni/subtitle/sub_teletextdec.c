@@ -572,9 +572,8 @@ static int teletext_decode_frame( AML_SPUVAR *spu, const uint8_t *s_data, const 
         if (!(ctx->vbi = vbi_decoder_new()))
             return -1;//AVERROR(ENOMEM);
         LOGI("[teletext_decode_frame]---01:%x--\n",ctx->vbi);
-        vbi_teletext_set_default_region(ctx->vbi, 32);
-        LOGI("[teletext_decode_frame]---02\n");
-        if (!vbi_event_handler_register(ctx->vbi, VBI_EVENT_TTX_PAGE, handler, ctx)) {
+        //vbi_teletext_set_default_region(ctx->vbi, 32);
+        if (!vbi_event_handler_add(ctx->vbi, VBI_EVENT_TTX_PAGE, handler, ctx)) {
             LOGI("[teletext_decode_frame]---03--\n");
             vbi_decoder_delete(ctx->vbi);
             ctx->vbi = NULL;

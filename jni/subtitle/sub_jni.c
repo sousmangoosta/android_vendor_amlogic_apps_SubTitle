@@ -579,7 +579,6 @@ void *inter_subtitle_parser()
 {
     int inner_sub_total = get_subtitle_num();
     int inner_sub_type = get_subtitle_subtype();
-
     //sub_thread = 1;
     while (sub_thread)
     {
@@ -589,6 +588,8 @@ void *inter_subtitle_parser()
         subThreadSleeping = 1;
         if (inner_sub_type == 1) // For pgs sub, speed up decode freq
             usleep(300000);
+        else if (get_inter_sub_type() == 9)
+            usleep(1000);          // For teletext sub, speed up decode freq more
         else
             usleep(500000);
         subThreadSleeping = 0;
