@@ -687,6 +687,29 @@ JNIEXPORT jstring JNICALL getSubPcrscr(JNIEnv *env, jclass cl)
     return jstr;
 }
 
+JNIEXPORT jstring JNICALL getInSubTypeStr(JNIEnv *env, jclass cl)
+{
+    LOGI("getInSubTypeStr");
+    jstring jstr;
+    char subTypeStr[1024] = {0};
+    //subTypeStr = getInSubTypeStr();
+    getInSubTypeStrs(subTypeStr);
+    //LOGI("[getInSubTypeStr] subTypeStr:%s",subTypeStr);
+    jstr = string2jstring(env, subTypeStr);
+    return jstr;
+}
+
+JNIEXPORT jstring JNICALL getInSubLanStr(JNIEnv *env, jclass cl)
+{
+    LOGI("getInSubLanStr");
+    jstring jstr;
+    char subLanStr[1024] = {0};
+    getInSubLanStrs(subLanStr);
+    //LOGI("[getInSubLanStr] subLanStr:%s",subLanStr);
+    jstr = string2jstring(env, subLanStr);
+    return jstr;
+}
+
 JNIEXPORT void JNICALL stopSubThread(JNIEnv *env, jclass cl)
 {
     //if (subThreadRunning == 1)
@@ -722,6 +745,8 @@ static JNINativeMethod insubMethods[] =
 {
     /* name, signature, funcPtr */
     {"getInSubtitleTotalByJni", "()I", (void *)getInSubtitleTotal},
+    {"getInSubTypeStrByJni", "()Ljava/lang/String;", (void *)getInSubTypeStr},
+    {"getInSubLanStrByJni", "()Ljava/lang/String;", (void *)getInSubLanStr},
     {
         "getInSubtitleTitleByJni", "()Ljava/lang/String;",
         (void *)getInSubtitleTitle

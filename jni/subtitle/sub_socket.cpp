@@ -180,6 +180,16 @@ void* startServerThread(void* arg) {
     return NULL;
 }
 
+void setInSubTypeLanBySkt(char *subInfoS) {
+    //ALOGV("[setInSubTypeLanBySkt]subInfoStr:%s\n",subInfoS);
+    char *ptrColon = strchr(subInfoS, '/');
+    if (ptrColon != NULL) {
+        strncpy(subTypeStr, subInfoS, ptrColon - subInfoS);
+        strcpy(subLanStr, ptrColon + 1);
+        //ALOGV("[setInSubTypeLanBySkt]subTypeStr:%s,subLanStr:%s\n",subTypeStr,subLanStr);
+    }
+}
+
 void child_connect(int sockfd) {
     char recvBuf[BUFFER_SIZE] = {0};
     char sendBuf[32] = {0};
@@ -222,7 +232,10 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            //ALOGV("child recv, mTotal:%d\n", mTotal);
+            ALOGV("child recv, mTotal:%d\n", mTotal);
+            strcpy(subInfoStr, recvBuf+8);
+            //ALOGE("child recv, subTypeStr:%s\n", subInfoStr);
+            setInSubTypeLanBySkt(subInfoStr);
         }
         else if (recvBuf[0] == 0x53
             && recvBuf[1] == 0x50
@@ -332,6 +345,18 @@ int getInfoBySkt(int type) {
     }
     //ALOGV("[getInfo]type:%d, ret:%d\n", type, ret);
     return ret;
+}
+
+void getInSubTypeStrBySkt(char *subTypeS) {
+    ALOGV("[getInSubTypeStr]subTypeStr:%s\n",subTypeStr);
+    strcpy(subTypeS, subTypeStr);
+    memset(subTypeStr, 0, 1024);
+}
+
+void getInSubLanStrBySkt(char * subLanS) {
+    ALOGV("[getInSubLanStrBySkt]subLanS:%s\n",subLanS);
+    strcpy(subLanS, subLanStr);
+    memset(subLanStr, 0, 1024);
 }
 
 void getPcrscrBySkt(char* pcrStr) {

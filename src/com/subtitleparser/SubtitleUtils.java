@@ -21,6 +21,8 @@ public class SubtitleUtils {
         public native int getInSubtitleTotalByJni();
         public native String getInSubtitleTitleByJni();
         public native String getInSubtitleLanguageByJni();
+        public native String getInSubTypeStrByJni();
+        public native String getInSubLanStrByJni();
 
         //public native int setInSubtitleNumberByJni(int  ms);
         public native void setSubtitleNumberByJni (int  idx);
@@ -34,6 +36,9 @@ public class SubtitleUtils {
         private List<SubID> strlist = new ArrayList<SubID>();
         private int exSubtotle = 0;
         private boolean supportLrc = true;//false; //lrc support
+
+        private String suffixExtSubtitleType = "";
+        private String suffixInSubtitleType = "";
 
         public static final String[] extensions = {
             "txt",
@@ -247,6 +252,81 @@ for (SubID file : strlist) {
                 }
             }
             exSubtotle = strlist.size();
+            Log.i("SubtitleUtils","accountExSubtitleNumber" + exSubtotle);
+            String suffix = null;
+            for (int i = 0; i < exSubtotle; i++) {
+                suffix = strlist.get(i).filename.substring(strlist.get(i).filename.lastIndexOf ('.')+1, strlist.get(i).filename.length());
+                suffix = suffix + ",";
+                suffixExtSubtitleType += suffix;
+                Log.i("SubtitleUtils","accountExSubtitleNumber suffix:" + suffixExtSubtitleType);
+            }
+        }
+
+        public String getExtSubTypeStrAll() {
+            //suffixInSubtitleType = getInSubTypeStrByJni();
+            if (suffixExtSubtitleType != null && !suffixExtSubtitleType.equals("")) {
+                return suffixExtSubtitleType;
+            }
+            return null;
+        }
+
+        public String getInSubLanStr() {
+            return getInSubLanStrByJni();
+        }
+
+        public String getInBmpTxtType() {
+            suffixInSubtitleType = getInSubTypeStrByJni();
+            //Log.i("SubtitleUtils","getSubTypeStrAll suffixInSubtitleType:" + suffixInSubtitleType + ",suffixExtSubtitleType:" + suffixExtSubtitleType);
+            if (suffixInSubtitleType.length() > 0) {
+                String[] typeStrArray = suffixInSubtitleType.split(",");
+                String bmpTxtType = "";
+                int type = -1;
+                for (int i = 0; i < typeStrArray.length; i++) {
+                    if ((type = isInBmpTxtType(typeStrArray[i])) != -1) {
+                        bmpTxtType += type;
+                        bmpTxtType = bmpTxtType + ",";
+                    }
+                }
+                return bmpTxtType;
+            }
+            return null;
+        }
+
+        public String getExtBmpTxtType() {
+            if (suffixExtSubtitleType.length() > 0) {
+                String[] typeStrArray = suffixExtSubtitleType.split(",");
+                String bmpTxtType = "";
+                for (int i = 0; i < typeStrArray.length; i++) {
+                    bmpTxtType += isExtBmpTxtType(typeStrArray[i]);
+                    bmpTxtType = bmpTxtType + ",";
+                }
+                return bmpTxtType;
+            }
+            return null;
+        }
+
+        public int isInBmpTxtType(String subType) {
+            Log.i("SubtitleUtils","isInBmpTxtType subType:" + subType);
+            if (subType != null) {
+                if (subType.equals("ssa") || subType.equals("subrip") ) {
+                    return 0;
+                } else if (subType.equals("teletext") || subType.equals("dvb") || subType.equals("pgs") || subType.equals("dvd")) {
+                    return 1;
+                }
+            }
+            return -1;
+        }
+
+        public int isExtBmpTxtType(String subType) {
+            Log.i("SubtitleUtils","isExtBmpTxtType subType:" + subType);
+            if (subType != null) {
+                if (subType.equals("idx")) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+            return -1;
         }
 
         //wait to finish.

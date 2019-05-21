@@ -36,6 +36,10 @@ static int64_t mTimeUs;
 static int64_t mStartPts;
 static int64_t mSize;
 
+static char subInfoStr[2048] = {0};
+static char subTypeStr[1024] = {0};
+static char subLanStr[1024] = {0};
+
 //client parameters
 static int client_list[QUEUE_SIZE];
 static int client_num;
@@ -53,6 +57,8 @@ void stopServer();
 int getSizeBySkt();
 void getDataBySkt(char *buf, int size);
 int getInfoBySkt(int type);
+void getInSubTypeStrBySkt(char* subTypeStr);
+void getInSubLanStrBySkt(char* subLanStr);
 void resetSocketBuffer();
 void getPcrscrBySkt(char* pcrStr);
 

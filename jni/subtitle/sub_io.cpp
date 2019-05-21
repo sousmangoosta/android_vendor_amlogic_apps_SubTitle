@@ -84,6 +84,14 @@ IOType getIOType() {
     return mIOType;
 }
 
+void getInSubTypeStrs(char *subTypeStr) {
+    getInSubTypeStrBySkt(subTypeStr);
+}
+
+void getInSubLanStrs(char *subLanStr) {
+    getInSubLanStrBySkt(subLanStr);
+}
+
 void getPcrscr(char* pcrStr) {
     getPcrscrBySkt(pcrStr);
 }

@@ -362,6 +362,39 @@ public class SubTitleService extends ISubTitleService.Stub {
         return subTitleView.getSubTypeStr();
     }
 
+    public String getExtSubTypeAll() {
+        //return subTitleView.getSubTypeStr();
+        LOGI("[getExtSubTypeStrAll]");
+        if (mSubtitleUtils != null) {
+            return mSubtitleUtils.getExtSubTypeStrAll();
+        }
+        return null;
+    }
+
+    public String getInBmpTxtType() {
+        LOGI("[getInBmpTxtType]");
+        if (mSubtitleUtils != null) {
+            return mSubtitleUtils.getInBmpTxtType();
+        }
+        return null;
+    }
+
+    public String getInSubLanAll() {
+        LOGI("[getInSubLanStr]");
+        if (mSubtitleUtils != null) {
+            return mSubtitleUtils.getInSubLanStr();
+        }
+        return null;
+    }
+
+    public String getExtBmpTxtType() {
+        LOGI("[getInBmpTxtType]");
+        if (mSubtitleUtils != null) {
+            return mSubtitleUtils.getExtBmpTxtType();
+        }
+        return null;
+    }
+
     public int getSubTypeDetial() {
         return subTitleView.getSubTypeDetial();
     }

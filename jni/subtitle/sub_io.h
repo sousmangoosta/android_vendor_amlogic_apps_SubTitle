@@ -38,6 +38,8 @@ int getSize(int sub_fd);
 void getData(int sub_fd, char *buf, int size);
 void setIOType(IOType type);
 IOType getIOType();
+void getInSubTypeStrs(char *subTypeStr);
+void getInSubLanStrs(char *subLanStr);
 void getPcrscr(char* pcrStr);
 
 #ifdef  __cplusplus
