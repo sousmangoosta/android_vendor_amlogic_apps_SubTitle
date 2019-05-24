@@ -480,9 +480,12 @@ static int mpeg_run(mpeg_t *mpeg, char read_flag)
             else
             {
                 //                //AF_VOBSUB_LOG_ERR(dbg_level, "VobSub: Unsupported MPEG version: 0x%02x\n", c);
-                return -1;
+                //return -1;
+                //if c not 0x44. can parse , fix OTT-3544
+                if (rar_seek(mpeg->stream, 9, SEEK_CUR))
+                    return -1;
             }
-            if (version == 4)
+            /*if (version == 4)
             {
                 if (rar_seek(mpeg->stream, 9, SEEK_CUR))
                     return -1;
@@ -493,7 +496,7 @@ static int mpeg_run(mpeg_t *mpeg, char read_flag)
                     return -1;
             }
             else
-                abort();
+                abort();*/
             break;
         case 0xbd:      /* packet */
             if (rar_read(buf, 2, 1, mpeg->stream) != 1)
@@ -832,7 +835,7 @@ static int vobsub_parse_id(vobsub_t *vob, const char *line)
     while (isspace(*p))
         ++p;
     q = p;
-    while (isalpha(*q))
+    while (isalpha(*q) || (*q == '-'))    //if id: --, index: 0 ,can parse, fix OTT-3544
         ++q;
     idlen = q - p;
     if (idlen == 0)
@@ -1130,9 +1133,9 @@ static int vobsub_parse_one_line(vobsub_t *vob, rar_stream_t *fd)
             //        AF_VOBSUB_LOG_INF(dbg_level, "vobsub: ignoring %s", line);
             continue;
         }
-        if (res < 0)
+        //if (res < 0)
             ////AF_VOBSUB_LOG_ERR(dbg_level,  "ERROR in %s", line);
-            break;
+            //break;
     }
     while (1);
     if (line)
