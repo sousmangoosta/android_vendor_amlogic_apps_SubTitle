@@ -2123,7 +2123,7 @@ static int internal_sub_autodetect(int fd)
         {
             return SUB_SUBVIEWER3;
         }
-        if (strstr(line, "<SAMI>"))
+        if (strstr(line, "<SAMI>") || strstr(line, "<sami>"))
         {
             return SUB_SAMI;
         }
