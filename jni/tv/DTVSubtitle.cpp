@@ -79,7 +79,7 @@ extern "C" {
         pthread_mutex_lock(&sub->lock);
     }
 
-    static void draw_end_cb(AM_TT2_Handle_t handle)
+    static void draw_end_cb(AM_TT2_Handle_t handle, int page_type, int pgno, char* subs, int sub_cnt, int red, int green, int yellow, int blue, int curr_subpg)
     {
         TVSubtitleData *sub = (TVSubtitleData *)AM_TT2_GetUserData(handle);
 
@@ -536,7 +536,7 @@ error:
         }
 
         AM_TT2_GotoPage(data->tt_handle, page, sub_page);
-        AM_TT2_Start(data->tt_handle);
+        AM_TT2_Start(data->tt_handle, region_id);
 
         memset(&pesp, 0, sizeof(pesp));
         pesp.packet    = pes_tt_cb;

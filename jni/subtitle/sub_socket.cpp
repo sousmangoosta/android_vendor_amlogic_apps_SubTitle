@@ -56,9 +56,24 @@ void safeCopy(char* sPtr, char* src, int size) {
     char* ptrEnd = sPtr + LOOP_BUFFER_SIZE;
     int leftReg = 0;//from nearest wptr to ptrEnd
 
+     if (size <= 0) return;
+    // a simple workaround to avoid overflow. do not care if retry still fail
+    int retry_time = 10000;
+    int receivedSize = 0;
+    while (retry_time-- > 0) {
+        receivedSize = (mWPtr >= mRPtr) ? mWPtr - mRPtr : (ptrEnd - mRPtr) + (mWPtr - ptrStart);
+        if ((LOOP_BUFFER_SIZE-receivedSize) > size)
+            break;
+        usleep(1000);
+    }
+    if (retry_time <= 0) {
+        ALOGE("[safeRead] DATA_CORRUCTION MAY HAPPENED! Error!!!!");
+        // the buffer always pulled, no need for handle this now.
+    }
+
     //skip case for data recover, which means write ptr is 256*1024 bigger than read ptr
     leftReg = ptrEnd - mWPtr;
-    ALOGV("[safeCopy]sPtr:0x%x, mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
+    //ALOGV("[safeCopy]sPtr:0x%x, mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
     if (mWPtr != 0) {
         if (leftReg >= size) {
             memcpy(mWPtr, src, size);
@@ -78,8 +93,26 @@ void safeRead(char* sPtr, char* des, int size) {
     char* ptrEnd = sPtr + LOOP_BUFFER_SIZE;
     int leftReg = 0;//from nearest rptr to ptrEnd
 
+    if (size <= 0) return;
+
+    // a simple workaround to avoid underflow. do not care if retry still fail
+    int retry_time = 10000;
+    int receivedSize = 0;
+    while (retry_time-- > 0) {
+        receivedSize = (mWPtr >= mRPtr) ? mWPtr - mRPtr : (ptrEnd - mRPtr) + (mWPtr - ptrStart);
+        if (receivedSize >= size)
+            break;
+        usleep(1000);
+    }
+    if (retry_time <= 0) {
+        ALOGE("[safeRead] DATA_CORRUCTION MAY HAPPENED! Error!!!!");
+        // if this happens, rescure the buffer.
+        memset(des, 0, size);
+        size = receivedSize; // read all the data, maybe can use, maybe still crash.
+    }
+
     leftReg = ptrEnd - mRPtr;
-    ALOGV("[safeRead]sPtr:0x%x,mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
+    //ALOGV("[safeRead]sPtr:0x%x,mWPtr:0x%x, mRPtr:0x%x, size:%d, leftReg:%d\n", sPtr, mWPtr, mRPtr, size, leftReg);
     if (mRPtr != 0) {
         if (leftReg >= size) {
             memcpy(des, mRPtr, size);
@@ -147,7 +180,7 @@ void* startServerThread(void* arg) {
          }*/
          if (listen(mSockFd, QUEUE_SIZE) == -1) {
              ALOGE("listen fail.error=%d, err:%s\n", errno, strerror(errno));
-             return NULL;;
+             return NULL;
          }
          ALOGV("[startServerThread]listen success.\n");
          while (!mStop) {
@@ -223,7 +256,7 @@ void child_connect(int sockfd) {
             continue;
         }
 
-        if (recvBuf[0] == 0x53
+        if ((retLen >= 8) && recvBuf[0] == 0x53
             && recvBuf[1] == 0x54
             && recvBuf[2] == 0x4F
             && recvBuf[3] == 0x54
@@ -235,9 +268,10 @@ void child_connect(int sockfd) {
             ALOGV("child recv, mTotal:%d\n", mTotal);
             strcpy(subInfoStr, recvBuf+8);
             //ALOGE("child recv, subTypeStr:%s\n", subInfoStr);
+            safeCopy(mLoopBuf, recvBuf+8, retLen-8);
             setInSubTypeLanBySkt(subInfoStr);
         }
-        else if (recvBuf[0] == 0x53
+        else if ((retLen >= 8) && recvBuf[0] == 0x53
             && recvBuf[1] == 0x50
             && recvBuf[2] == 0x54
             && recvBuf[3] == 0x53
@@ -246,9 +280,10 @@ void child_connect(int sockfd) {
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
-            //ALOGV("child recv, mStartPts:%" PRId64 "\n", mStartPts);
+            ALOGV("child recv, mStartPts:%" PRId64 "\n", mStartPts);
+            safeCopy(mLoopBuf, recvBuf+8, retLen-8);
         }
-        else if (recvBuf[0] == 0x53
+        else if ((retLen >= 8) && recvBuf[0] == 0x53
             && recvBuf[1] == 0x54
             && recvBuf[2] == 0x59
             && recvBuf[3] == 0x50
@@ -258,8 +293,9 @@ void child_connect(int sockfd) {
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
             //ALOGV("child recv, mType:%d\n", mType);
+            safeCopy(mLoopBuf, recvBuf+8, retLen-8);
         }
-        else if (recvBuf[0] == 0x53
+        else if ((retLen >= 8) && recvBuf[0] == 0x53
             && recvBuf[1] == 0x52
             && recvBuf[2] == 0x44
             && recvBuf[3] == 0x54) {//SRDT //subtitle render time
@@ -268,8 +304,9 @@ void child_connect(int sockfd) {
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
             //ALOGV("child recv, mTimeUs:%d\n", mTimeUs);
+            safeCopy(mLoopBuf, recvBuf+8, retLen-8);
         }
-        else if (recvBuf[0] != 'S' && recvBuf[1] != 'T' && recvBuf[2] != 'Y' && recvBuf[3] != 'P') {
+        else /*if (recvBuf[0] != 'S' && recvBuf[1] != 'T' && recvBuf[2] != 'Y' && recvBuf[3] != 'P')*/ {
             safeCopy(mLoopBuf, recvBuf, retLen);
         }
 
@@ -296,7 +333,10 @@ void startServer() {
     mType = -1;
 
     pthread_t sst;
-    pthread_create(&sst, NULL, startServerThread, NULL);
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr,1);
+    pthread_create(&sst, &attr, startServerThread, NULL);
     //pthread_join(sst, NULL);
 }
 
@@ -314,8 +354,44 @@ void stopServer() {
 }
 
 void resetSocketBuffer() {
+
+    char *rp = mRPtr;
+    char *wp = mWPtr;
+    char* ptrStart = mLoopBuf;
+    char* ptrEnd = mLoopBuf + LOOP_BUFFER_SIZE;
+    int receivedSize = (wp >= rp) ? wp - rp : (ptrEnd - rp) + (wp - ptrStart);
+    char *buffer = (char *)malloc(receivedSize);
+    int leftReg = ptrEnd - rp;
+
+    if (leftReg >= receivedSize) {
+        memcpy(buffer, rp, receivedSize);
+    } else {
+        memcpy(buffer, rp, leftReg);
+        memcpy((buffer + leftReg), mLoopBuf, (receivedSize - leftReg));
+    }
+
+    for (int i=0; i<receivedSize-8; i++) {
+        char *recvBuf = buffer + i;
+        if (recvBuf[0] == 0x53
+                && recvBuf[1] == 0x54
+                && recvBuf[2] == 0x59
+                && recvBuf[3] == 0x50
+                && mType < 0) {//STYP
+            mType = (recvBuf[4] << 24)
+                | (recvBuf[5] << 16)
+                | (recvBuf[6] << 8)
+                | recvBuf[7];
+        }
+    }
+
+    ALOGD("reset socket, discard %d size data, resolved mType=%d", receivedSize, mType);
+
     mRPtr = mLoopBuf;
     mWPtr = mLoopBuf;
+    /*if (buffer != NULL) {
+        free(buffer);
+        buffer = NULL;
+    }*/
     if (mLoopBuf != NULL) {
         memset(mLoopBuf, 0, LOOP_BUFFER_SIZE);
     }

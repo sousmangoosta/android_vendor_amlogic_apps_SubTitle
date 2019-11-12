@@ -591,7 +591,7 @@ void *inter_subtitle_parser()
         else if (get_inter_sub_type() == 9)
             usleep(1000);          // For teletext sub, speed up decode freq more
         else
-            usleep(500000);
+            usleep(83000);
         subThreadSleeping = 0;
     }
     return NULL;

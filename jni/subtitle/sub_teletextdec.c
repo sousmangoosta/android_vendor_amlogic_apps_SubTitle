@@ -404,7 +404,7 @@ static int gen_sub_bitmap(TeletextContext *ctx, AVSubtitleRect *sub_rect, vbi_pa
     vbi_draw_vt_page_region(page, VBI_PIXFMT_PAL8,
                             sub_rect->pict.data[0], sub_rect->pict.linesize[0],
                             0, chop_top, page->columns, page->rows - chop_top,
-                            /*reveal*/ 1, /*flash*/ 1, /*Subtitle*/1);
+                            /*reveal*/ 1, /*flash*/ 1, /*Subtitle*/1, 0, 0, 0, NULL, 0);
 
     fix_transparency(ctx, sub_rect, page, chop_top, resx, resy);
     sub_rect->x = ctx->x_offset;
@@ -446,6 +446,7 @@ static void handler(vbi_event *ev, void *user_data)
     vbi_page_type vpt;
     int chop_top;
     char *lang;
+    int page_type;
 
     snprintf(pgno_str, sizeof pgno_str, "%03x", ev->ev.ttx_page.pgno);
     LOGI("decoded page %s.;  %02x, ctx->pgno=%s\n",
@@ -463,7 +464,7 @@ static void handler(vbi_event *ev, void *user_data)
     res = vbi_fetch_vt_page(ctx->vbi, &page,
                             ev->ev.ttx_page.pgno,
                             ev->ev.ttx_page.subno,
-                            VBI_WST_LEVEL_3p5, 25, TRUE);
+                            VBI_WST_LEVEL_3p5, 25, TRUE, &page_type);
 
     if (!res) {
         LOGI("%s, return, page get error\n",__FUNCTION__);

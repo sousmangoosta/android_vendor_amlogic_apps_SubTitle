@@ -1579,7 +1579,7 @@ static void save_display_set(DVBSubContext *ctx, AML_SPUVAR *spu)
             }
             dvb_sub_valid_flag = 1;
         }
-        //snprintf(filename, sizeof(filename), "./temp/dvbs.%d", fileno_index);
+        //snprintf(filename, sizeof(filename), "./data/DVB/dvbs.%d", spu->pts);
         //png_save2(filename, pbuf, width, height);
         LOGI("## save_display_set: %d, (%d,%d)--(%d,%d),(%d,%d)---\n",
              fileno_index, width, height, spu->spu_width,
