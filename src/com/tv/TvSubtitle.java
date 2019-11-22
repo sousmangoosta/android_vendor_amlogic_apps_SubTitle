@@ -17,6 +17,8 @@ import android.view.accessibility.CaptioningManager;
 import android.view.accessibility.CaptioningManager.CaptionStyle;
 import com.droidlogic.SubTitleService.R;
 import com.tv.DTVSubtitleView;
+import com.droidlogic.app.ISubTitleServiceCallback;
+
 
 public class TvSubtitle {
     private static final String TAG = "TvSubtitle";
@@ -26,6 +28,10 @@ public class TvSubtitle {
     private DTVSubtitleView mTvSubtitleView = null;
     private CaptioningManager mCaptioningManager = null;
 
+    private static final int TV_SUB_MPEG2 = 0;  //close caption mpeg2
+    private static final int TV_SUB_H264 = 2;    //close caption h264
+    private static final int TV_SUB_SCTE27 = 3;
+    private static final int TV_SUB_DVB = 4;
     public TvSubtitle(Context context, View view) {
         mContext = context;
         mTvSubtitleView = (DTVSubtitleView)view.findViewById(R.id.tvsubtitle);
@@ -47,18 +53,48 @@ public class TvSubtitle {
         }
     }
 
+    public static void setCallback(ISubTitleServiceCallback cb)  {
+        //DTVSubtitleView.setCallback(cb);
+    }
+
+    public int getSubHeight() {
+        if (mTvSubtitleView != null) {
+            return mTvSubtitleView.getSubHeight();
+        }
+        return -1;
+    }
+
+    public int getSubWidth() {
+        if (mTvSubtitleView != null) {
+            return mTvSubtitleView.getSubWidth();
+        }
+        return -1;
+    }
+
+
     public void show() {
         if (mTvSubtitleView != null) {
             mTvSubtitleView.show();
         }
     }
 
-    public void start(int vfmt, int pid) {
-        LOGI("[start] pid:" + pid + ", mTvSubtitleView:" + mTvSubtitleView);
+    public void switchCloseCaption(int tvType, int vfmt, int channelId) {
+        LOGI("[start]tvType:" + tvType + ",vfmt:" + vfmt + ",channelId:" + channelId);
+        if (mTvSubtitleView != null) {
+            setParam(-1, vfmt, channelId, 0, 0, 0);
+            mTvSubtitleView.switchCloseCaption(vfmt, channelId);
+        }
+        else {
+            LOGI("[start]tv subtitle view is null");
+        }
+    }
+
+    public void start(int tvType, int vfmt, int channelId, int pid, int page_id, int anc_page_id) {
+        LOGI("[start] tvType:" + tvType + ",vfmt:" + vfmt + ",channelId:" + channelId + ",pid:" + pid + ",page_id:" + page_id + ",anc_page_id:" + anc_page_id + ", mTvSubtitleView:" + mTvSubtitleView);
         if (mTvSubtitleView != null) {
             enableSubtitleShow(true);
-            mTvSubtitleView.stop();
-            setParam(vfmt, pid);
+            mTvSubtitleView.stopAll();
+            setParam(tvType, vfmt, channelId, pid, page_id, anc_page_id);
             mTvSubtitleView.setActive(true);
             mTvSubtitleView.startSub();
         }
@@ -78,6 +114,17 @@ public class TvSubtitle {
         }
     }
 
+    public void stopAll() {
+        LOGI("[stopAll]");
+        if (mTvSubtitleView != null) {
+            enableSubtitleShow(false);
+            mTvSubtitleView.stopAll();
+        }
+        else {
+            LOGI("[stopAll]tv subtitle view is null");
+        }
+    }
+
     private void enableSubtitleShow(boolean enable) {
         if (mTvSubtitleView != null) {
             mTvSubtitleView.setVisible(enable);
@@ -88,23 +135,46 @@ public class TvSubtitle {
         }
     }
 
-    private void setParam(int vfmt, int pid) {
-        CCStyleParams ccParam = getCaptionStyle();
-        DTVSubtitleView.DTVCCParams params =
-            new DTVSubtitleView.DTVCCParams(vfmt, pid,
-                ccParam.fg_color,
-                ccParam.fg_opacity,
-                ccParam.bg_color,
-                ccParam.bg_opacity,
-                ccParam.font_style,
-                ccParam.font_size);
-        mTvSubtitleView.setSubParams(params);
+
+    /**
+     * set subtitle param
+     * @param tvType: 0:mpeg,2:h264, 3:scte27, 4:dvb subtitle
+     * @param vfmt 0:mpeg, 2:h264
+     * @param channelId: cc channelId
+     * @param pid: subtitle pid, scte27 & dvb subtitle need
+     * @param page_id: dvb subtitle need
+     * @param anc_page_id: dvb subtitle need
+     */
+    private void setParam(int tvType, int vfmt, int channelId, int pid, int page_id, int anc_page_id) {
+        //if (vfmt == TV_SUB_MPEG2 || vfmt == TV_SUB_H264) {
+            CCStyleParams ccParam = getCaptionStyle();
+            DTVSubtitleView.DTVCCParams params =
+                new DTVSubtitleView.DTVCCParams(vfmt, channelId,
+                    ccParam.fg_color,
+                    ccParam.fg_opacity,
+                    ccParam.bg_color,
+                    ccParam.bg_opacity,
+                    ccParam.font_style,
+                    ccParam.font_size);
+            mTvSubtitleView.setSubParams(params);
+            LOGI("[setParam]pid=" + pid +
+                ",vfmt=" + vfmt +
+                ",channelId=" + channelId +
+                ",fg_color=" + ccParam.fg_color +
+                ", fg_op=" + ccParam.fg_opacity +
+                ", bg_color=" + ccParam.bg_color +
+                ", bg_op=" + ccParam.bg_opacity);
+        //}
+
+        if (tvType == TV_SUB_SCTE27) {
+            DTVSubtitleView.Scte27Params sub_params = new DTVSubtitleView.Scte27Params(1, pid);
+            mTvSubtitleView.setSubParams(sub_params);
+        } else if (tvType == TV_SUB_DVB) {
+            DTVSubtitleView.DVBSubParams sub_params = new DTVSubtitleView.DVBSubParams(1, pid, page_id, anc_page_id);
+            mTvSubtitleView.setSubParams(sub_params);
+        }
         mTvSubtitleView.setMargin(225, 128, 225, 128);
-        LOGI("[setParam]pid=" + pid +
-            ",fg_color=" + ccParam.fg_color +
-            ", fg_op=" + ccParam.fg_opacity +
-            ", bg_color=" + ccParam.bg_color +
-            ", bg_op=" + ccParam.bg_opacity);
+
     }
 
     private class CCStyleParams {
@@ -266,6 +336,12 @@ public class TvSubtitle {
                 return DTV_OPACITY_SOLID;
         }
         return DTV_OPACITY_TRANSPARENT;
+    }
+    public String getSubLanguage() {
+        if (mTvSubtitleView != null) {
+            return mTvSubtitleView.getSubLanguage();
+        }
+        return null;
     }
 
     private float getFontSize(float textSize) {

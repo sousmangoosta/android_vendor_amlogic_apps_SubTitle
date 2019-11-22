@@ -28,9 +28,15 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.widget.LinearLayout;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
+import android.os.SystemProperties;
 import java.util.Timer;
 import java.util.TimerTask;
+
+//import com.droidlogic.app.ISubTitleServiceCallback;
+
 
 public class SubtitleView extends FrameLayout {
         private static final String TAG = SubtitleView.class.getSimpleName();
@@ -59,6 +65,10 @@ public class SubtitleView extends FrameLayout {
 
         private static Object mLock = new Object();
 
+        //subtitleservice callback
+        private static SubtitleDataListener mCallback = null;
+        private boolean hasReportAvail = false;
+
         //add for pgs show
         private SubData dataPgsA = null;
         private SubData dataPgsB = null;
@@ -76,6 +86,7 @@ public class SubtitleView extends FrameLayout {
 
         public SubtitleView (Context context) {
             super (context);
+            hasReportAvail = false;
             init (context);
         }
 
@@ -91,9 +102,11 @@ public class SubtitleView extends FrameLayout {
 
         private void init (Context context) {
             mContext = context;
+            hasReportAvail = false;
             mImageView = new ImageView (context);
             mTextView = new TextView (context);
             if (mTextView != null) {
+                mTextView.setTextDirection(View.TEXT_DIRECTION_LTR);
                 mTextView.setTextColor (0);
                 mTextView.setTextSize (12);
                 //mTextView.setTypeface (null, Typeface.BOLD);
@@ -102,6 +115,8 @@ public class SubtitleView extends FrameLayout {
             wscale = 1.000f;
             hscale = 1.000f;
             SubManager.getinstance();
+            //decoderTimeOutStart = System.currentTimeMillis();
+            //SubtitleDecoderCountDown();
         }
 
         public void setImgSubRatio (float ratioW, float ratioH, int maxW, int maxH) {
@@ -243,6 +258,90 @@ public class SubtitleView extends FrameLayout {
             return typeStr;
         }
 
+    private static final int MSG_COUNT_DOWN = 0xE1;//random value
+    private Timer decoderTimer = new Timer();
+    private int decoderTimeOut= 60;          //default 60s
+    private long dTimeUpdate= 0;
+    private long decoderTimeOutStart= 0;
+
+    public void SubtitleDecoderCountDown() {
+        Log.e(TAG, "decoder-time count down begin....");
+        final Handler decoderhandler = new Handler(Looper.getMainLooper()) {
+            public void handleMessage (Message msg) {
+                switch (msg.what) {
+                    case MSG_COUNT_DOWN:
+                        if (mCallback != null) {
+                                Log.e(TAG, "decoder-time count down end.....data loss!");
+                                reportAvail(3);  //event: 3  decoder error
+                                decoderTimeOutStart = System.currentTimeMillis();
+                        }
+                        break;
+                }
+                super.handleMessage (msg);
+            }
+        };
+        TimerTask task = new TimerTask() {
+            public void run() {
+                Message message = Message.obtain();
+                message.what = MSG_COUNT_DOWN;
+                decoderhandler.sendMessage (message);
+            }
+        };
+        stopSubDecoderTimeout();
+        if (decoderTimer == null) {
+            decoderTimer = new Timer();
+        }
+        if (decoderTimer != null) {
+            decoderTimer.schedule (task, getSubDecoderTimeOut());
+        }
+    }
+
+    private void stopSubDecoderTimeout() {
+        if (decoderTimer != null) {
+            decoderTimer.cancel();
+        }
+        decoderTimer = null;
+    }
+
+    private int getSubDecoderTimeOut() {
+        decoderTimeOut = SystemProperties.getInt("vendor.sys.subtitleService.decodeTimeOut", 60);
+        //Log.d(TAG, "[getSubDecoderTimeOut]decoder timeout:" + decoderTimeOut * 1000);
+        return decoderTimeOut * 1000;
+    }
+
+    /*public static void setCallback(ISubTitleServiceCallback cb) {
+        mCallback= cb;
+    }*/
+
+    public void startTimeOut() {
+        //Log.d(TAG, "[reportAvailable]");
+        if (decoderTimer != null) {
+             Log.e(TAG, "decoder-time count down cancel....");
+             decoderTimer.cancel();
+             decoderTimer.purge();
+        }
+        decoderTimer = null;
+         dTimeUpdate = System.currentTimeMillis();
+         if ((int)(dTimeUpdate - decoderTimeOutStart) < getSubDecoderTimeOut()) {
+             decoderTimeOutStart = dTimeUpdate;
+         }
+        reportAvail(1);
+        SubtitleDecoderCountDown();
+    }
+
+     public void reportAvail (int v) {
+        if (mCallback != null) {
+            if (v == 1) {
+                if (!hasReportAvail) {
+                    hasReportAvail = true;
+                    mCallback.onSubTitleAvailable(v);
+                }
+            } else {
+                hasReportAvail = false;
+                mCallback.onSubTitleAvailable(v);
+            }
+        }
+    }
         public void redraw (SubData data) {
             this.removeAllViews();
             stopOsdTimeout();
@@ -254,6 +353,7 @@ public class SubtitleView extends FrameLayout {
                         if ( (inter_bitmap != null) && (mImageView != null) ) {
                             mImageView.setImageBitmap (inter_bitmap);
                             this.addView (mImageView);
+                            startTimeOut();
                         }
                     } else {
                         if (mTextView != null && ssaTextStr != null) {
@@ -281,7 +381,7 @@ public class SubtitleView extends FrameLayout {
         }
 
         public void redraw() {
-            //Log.i(TAG, "[redraw]");
+            Log.i(TAG, "[redraw]");
             this.removeAllViews();
             stopOsdTimeout();
             if (data != null) {
@@ -543,6 +643,13 @@ public class SubtitleView extends FrameLayout {
                         if (dataPgsBValid == false) {
                             getDataForPsgB(modifytime);
                         }
+                        //in case video stream from begin not reset.
+                        //Log.i(TAG,"[tick]data-1:"+data+",dataPgsAValid:"+dataPgsAValid+",dataPgsBValid:"+dataPgsBValid+",modifytime:"+modifytime);
+                        if (dataPgsAValid == true && dataPgsBValid == true && modifytime < dataPgsA.beginTime()) {
+                            data = null;
+                            dataPgsAValid = false;
+                            dataPgsBValid = false;
+                        }
                     } else {
                         //dataPgsAValid = false, dataPgsBValid = false, should get dataPgsA immediately
                         getDataForPsgA (modifytime);
@@ -697,5 +804,13 @@ public class SubtitleView extends FrameLayout {
                 return data.getOriginH();
             }
             return 0;
+        }
+
+        public static void setCallback(SubtitleDataListener cb) {
+            mCallback = cb;
+        }
+        public interface SubtitleDataListener {
+            public void onSubTitleEvent(int event, int id);
+            public void onSubTitleAvailable(int available);
         }
 }

@@ -220,6 +220,14 @@ int get_ass_spu(char *spu_buf, unsigned length, AML_SPUVAR *spu)
                 break;
             }
 
+            unsigned char *p2 = strstr(spu_buf + i, "0000,0000,0000,karaoke,");
+            if (p2)
+            {
+                spu->buffer_size -= (p2 + 23 - spu->spu_data);
+                memmove(spu->spu_data, p2 + 23, spu->buffer_size);
+                break;
+            }
+
             unsigned char *p1 = strstr(spu_buf + i, "0000,0000,0000,!Effect,");
             if (p1)
             {

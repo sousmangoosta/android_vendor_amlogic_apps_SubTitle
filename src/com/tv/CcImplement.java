@@ -346,7 +346,7 @@ public class CcImplement {
             max_font_size = max_font_height;
 
             //This is used for postioning character in 608 mode.
-            fixed_char_width = safe_title_width / (cc_col_count + 1);
+            fixed_char_width = safe_title_width / (cc_col_count + 1) / 1.5;
 
             anchor_horizon = ((video_h_v_rate_origin & 1) == 0)?210:160; //16:9 or 4:3
             anchor_vertical = 75;
@@ -1150,7 +1150,7 @@ public class CcImplement {
                             try {
                                 font_style = rowStr.getString("font_style");
                             } catch (Exception e) {
-                                font_style = "default";
+                                font_style = "mono_serif";
                             }
 
                             try {
@@ -1302,7 +1302,7 @@ public class CcImplement {
                                 string_length_on_paint = window_paint.measureText(data) + max_single_font_width;
                             // string_length_on_paint = (data.length()+1) * max_single_font_width;
                         } else {
-                            string_length_on_paint = data.length() * caption_screen.fixed_char_width;
+                            string_length_on_paint = window_paint.measureText(data) + max_single_font_width;
                         }
                         /* Convert */
                         /*
@@ -1420,31 +1420,29 @@ public class CcImplement {
                     void draw_str(Canvas canvas, String str, float left, float bottom, Paint paint)
                     {
                         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-                        if (ccVersion.matches("cea708")) {
+                        //if (ccVersion.matches("cea708")) {
                             canvas.drawText(str, left, bottom, paint);
-                        } else {
-                            int i, l = str.length();
-                            float x = left;
+                        //} else {
+                        //    int i, l = str.length();
 
-                            for (i = 0; i < l; i++) {
-                                String sub = str.substring(i, i + 1);
-                                canvas.drawText(sub, x, bottom, paint);
-                                x += caption_screen.fixed_char_width;
-                            }
-                        }
+
+                         //       String sub = str.substring(i, i + 1);
+                         //       canvas.drawText(sub, x, bottom, paint);
+                         //       x += caption_screen.fixed_char_width;
+                         //   }
+                        //}
                         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
-                        if (ccVersion.matches("cea708")) {
+                        //if (ccVersion.matches("cea708")) {
                             canvas.drawText(str, left, bottom, paint);
-                        } else {
-                            int i, l = str.length();
-                            float x = left;
+                        //} else {
+                        //    int i, l = str.length();
 
-                            for (i = 0; i < l; i++) {
-                                String sub = str.substring(i, i + 1);
-                                canvas.drawText(sub, x, bottom, paint);
-                                x += caption_screen.fixed_char_width;
-                            }
-                        }
+
+                         //       String sub = str.substring(i, i + 1);
+                         //       canvas.drawText(sub, x, bottom, paint);
+                         //       x += caption_screen.fixed_char_width;
+                         //   }
+                        //}
                     }
 
                     void draw_text(Canvas canvas, String data,

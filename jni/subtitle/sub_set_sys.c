@@ -52,8 +52,12 @@ int get_subtitle_enable()
 int get_subtitle_num()
 {
     int ret = 0;
-    //avoid setIOType later, p use only IO_TYPE_SOCKET.
-    ret = getInfo(TYPE_TOTAL);
+    if (getIOType() == IO_TYPE_DEV) {
+        ret = get_sysfs_int("/sys/class/subtitle/total");
+    }
+    else if (getIOType() == IO_TYPE_SOCKET) {
+        ret = getInfo(TYPE_TOTAL);
+    }
     return ret;
 }
 
@@ -78,9 +82,24 @@ int get_subtitle_curr()
     return get_sysfs_int("/sys/class/subtitle/curr");
 }
 
+int set_subtitle_height(int heitht)
+{
+    return set_sysfs_int("/sys/class/subtitle/heitht", heitht);
+}
+
+int set_subtitle_width(int width)
+{
+    return set_sysfs_int("/sys/class/subtitle/width", width);
+}
+
 int set_subtitle_size(int size)
 {
     return set_sysfs_int("/sys/class/subtitle/size", size);
+}
+
+int set_subtitle_errnums(int errnums){
+    log_print("[%s::%d] errnums:%d----- \n", __FUNCTION__, __LINE__, errnums);
+    return set_sysfs_int("/sys/class/subtitle/errnums", errnums);
 }
 
 int get_subtitle_size()

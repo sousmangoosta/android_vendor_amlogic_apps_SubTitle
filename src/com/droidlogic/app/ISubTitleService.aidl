@@ -8,6 +8,8 @@
 */
 package com.droidlogic.app;
 
+import com.droidlogic.app.ISubTitleServiceCallback;
+
 interface ISubTitleService
 {
     void open(String path);
@@ -42,7 +44,15 @@ interface ISubTitleService
     void setSurfaceViewParam(int x, int y, int w, int h);
     void setIOType(int type);
     String getPcrscr();
+    String getInSubLanAll();
     String getInBmpTxtType();
     String getExtBmpTxtType();
     String getExtSubTypeAll();
+    void setSubPid(int pid);
+    int getSubHeight();
+    int getSubWidth();
+    void setSubType(int type);
+    void registerCallback(ISubTitleServiceCallback cb);
+    void unregisterCallback();
+    void destory();
 }

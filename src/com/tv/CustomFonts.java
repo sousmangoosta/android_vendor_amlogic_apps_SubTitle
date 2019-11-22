@@ -32,12 +32,12 @@ public class CustomFonts {
     CustomFonts(Context context)
     {
         try {
-            mono_serif_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_type.ttf"));
-            mono_serif_it_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_type_it.ttf"));
+            mono_serif_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_mono.ttf"));
+            mono_serif_it_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_mono_it.ttf"));
             casual_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_casual.ttf"));
             casual_it_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_casual_it.ttf"));
-            prop_sans_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_sans.ttf"));
-            prop_sans_it_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_sans_it.ttf"));
+            prop_sans_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_serif.ttf"));
+            prop_sans_it_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_serif_it.ttf"));
             small_capital_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_sc.ttf"));
             small_capital_it_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_sc_it.ttf"));
             cursive_tf = Typeface.createFromFile(new File(context.getDataDir(), "font/cinecavD_script.ttf"));

@@ -218,6 +218,8 @@ static inline uint8_t bytestream_get_byte(const uint8_t **ptr)
 #endif
 
 static int dvb_sub_valid_flag = 0;
+int errnums = 0;
+
 static void png_save2(const char *filename, uint32_t *bitmap, int w, int h)
 {
     int x, y, v;
@@ -602,6 +604,7 @@ av_cold int dvbsub_close_decoder()
         delete_regions(ctx);
         delete_objects(ctx);
         delete_cluts(ctx);
+        errnums = 0;
         av_freep(&ctx->display_definition);
         while (ctx->display_list)
         {
@@ -1581,6 +1584,7 @@ static void save_display_set(DVBSubContext *ctx, AML_SPUVAR *spu)
         }
         //snprintf(filename, sizeof(filename), "./data/DVB/dvbs.%d", spu->pts);
         //png_save2(filename, pbuf, width, height);
+        set_subtitle_height(height);
         LOGI("## save_display_set: %d, (%d,%d)--(%d,%d),(%d,%d)---\n",
              fileno_index, width, height, spu->spu_width,
              spu->spu_height, spu->spu_start_x, spu->spu_start_y);
@@ -2128,7 +2132,9 @@ int get_dvb_spu(AML_SPUVAR *spu, int read_handle)
                             }
                             else
                             {
-                                LOGI("dvb data error skip one frame !!\n\n");
+                                errnums++;
+                                set_subtitle_errnums(errnums);
+                                LOGI("dvb data error skip one frame errnums:%d!!\n\n", errnums);
                                 return -1;
                             }
                         }
@@ -2189,6 +2195,7 @@ aml_soft_demux:
                  __FUNCTION__, __LINE__, spu->spu_data,
                  DVB_SUB_SIZE);
             spu->pts = dvb_pts;
+            LOGI("socket send pts:%d\n", spu->pts);
             LOGI("## 4444 datalen=%d,pts=%x,delay=%x,diff=%x, data: %x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,--%d,%x,%x,-------------\n", data_len, dvb_pts, spu->m_delay, dvb_temp_pts, tmpbuf[0], tmpbuf[1], tmpbuf[2], tmpbuf[3], tmpbuf[4], tmpbuf[5], tmpbuf[6], tmpbuf[7], tmpbuf[8], tmpbuf[9], tmpbuf[10], tmpbuf[11], tmpbuf[12], tmpbuf[13], tmpbuf[14]);
             data = malloc(data_len);
             if (!data)
@@ -2201,6 +2208,7 @@ aml_soft_demux:
             LOGI("## ret=%d,data_len=%d, %x,%x,%x,%x,%x,%x,%x,%x,---------\n", ret, data_len, data[0], data[1], data[2], data[3], data[data_len - 4], data[data_len - 3], data[data_len - 2], data[data_len - 1]);
             pdata = data;
             ret = dvbsub_decode(spu, data, data_len);
+            LOGI("socket receive decode pts:%d\n", spu->pts);
             LOGI("## dvb: (width=%d,height=%d), (x=%d,y=%d), dvb_sub_valid_flag=%d,---------\n", spu->spu_width, spu->spu_height, spu->spu_start_x, spu->spu_start_y, dvb_sub_valid_flag);
             write_subtitle_file(spu);
             if (pdata)

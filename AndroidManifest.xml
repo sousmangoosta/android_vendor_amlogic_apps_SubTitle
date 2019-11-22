@@ -9,7 +9,8 @@
     <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="droidlogic.permission.SYSTEM_CONTROL" />
-    <application>
+    <application android:persistent="true"
+         android:supportsRtl="true">
         <uses-library android:name="droidlogic.software.core" />
         <service
             android:name=".SubTitleServer"
@@ -19,5 +20,10 @@
                 <action android:name="com.droidlogic.SubTitleServer"/>
             </intent-filter>
         </service>
+        <receiver android:name=".SubTitleServiceBroadcastReceiver">
+            <intent-filter android:priority="2147483647">
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

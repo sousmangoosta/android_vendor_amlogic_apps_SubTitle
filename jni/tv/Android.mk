@@ -9,7 +9,23 @@ ifeq ($(DVB_PATH), )
 endif
 
 #######################################################################
+include $(CLEAR_VARS)
 
+LOCAL_MODULE    := libjnivendorfont
+LOCAL_PRELINK_MODULE := false
+LOCAL_MODULE_CLASS := SHARED_LIBRARIES
+LOCAL_MODULE_SUFFIX := .so
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_SRC_FILES := arm/libvendorfont.so
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+#LOCAL_PROPRIETARY_MODULE := true
+endif
+LOCAL_PRODUCT_MODULE := true
+
+include $(BUILD_PREBUILT)
+#######################################################################
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libtvsubtitle_tv
@@ -27,14 +43,27 @@ LOCAL_C_INCLUDES := external/libzvbi/src \
   vendor/amlogic/common/external/libzvbi/src \
   $(JNI_H_INCLUDE) \
 
+#LOCAL_C_INCLUDES := \
+#  bionic/libc/include \
+#  external/skia/include/core \
+#  external/skia/include/config \
+#  libnativehelper/include_jni \
+#  frameworks/native/include
 
-LOCAL_SHARED_LIBRARIES += libzvbi libam_mw libam_adp  liblog libcutils
+
+LOCAL_SHARED_LIBRARIES += libjnigraphics  liblog libcutils   libicuuc libicui18n
+LOCAL_STATIC_LIBRARIES += \
+  libam_mw \
+  libzvbi \
+  libsqlite \
+  libam_adp
 
 LOCAL_PRELINK_MODULE := false
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
-LOCAL_PROPRIETARY_MODULE := true
+#LOCAL_PROPRIETARY_MODULE := true
 endif
+LOCAL_PRODUCT_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -54,14 +83,14 @@ LOCAL_C_INCLUDES := \
     system/core/libutils/include \
     system/core/liblog/include \
     libnativehelper/include/nativehelper
-LOCAL_SHARED_LIBRARIES += libvendorfont  liblog  libcutils
+LOCAL_SHARED_LIBRARIES += libjnivendorfont  liblog  libcutils
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
-LOCAL_PROPRIETARY_MODULE := true
+#LOCAL_PROPRIETARY_MODULE := true
 endif
-
+LOCAL_PRODUCT_MODULE := true
 LOCAL_PRELINK_MODULE := false
 
-#include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_SHARED_LIBRARY)
 
 #######################################################################

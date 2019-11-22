@@ -16,16 +16,25 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src) \
-    src/com/droidlogic/app/ISubTitleService.aidl
+    src/com/droidlogic/app/ISubTitleService.aidl  \
+    src/com/droidlogic/app/ISubTitleServiceCallback.aidl
 
-ifndef PRODUCT_SHIPPING_API_LEVEL
+#ifndef PRODUCT_SHIPPING_API_LEVEL
+#LOCAL_PRIVATE_PLATFORM_APIS := true
+#endif
+LOCAL_JAVA_LIBRARIES := \
+	android.hidl.base-V1.0-java \
+	android.hidl.manager-V1.0-java
+
+LOCAL_STATIC_JAVA_LIBRARIES := \
+	vendor.amlogic.hardware.subtitleserver-V1.0-java
+
 LOCAL_PRIVATE_PLATFORM_APIS := true
-endif
-
+LOCAL_PRODUCT_MODULE := true
 LOCAL_PROGUARD_ENABLED := disabled
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
-LOCAL_PROPRIETARY_MODULE := true
+#LOCAL_PROPRIETARY_MODULE := true
 endif
 
 LOCAL_PACKAGE_NAME := SubTitle
