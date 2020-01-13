@@ -260,7 +260,7 @@ void child_connect(int sockfd) {
             && recvBuf[1] == 0x54
             && recvBuf[2] == 0x4F
             && recvBuf[3] == 0x54
-            /*&& mTotal < 0*/) {//STOT
+            && mTotal < 0) {//STOT
             mTotal = (recvBuf[4] << 24)
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
@@ -268,32 +268,32 @@ void child_connect(int sockfd) {
             ALOGV("child recv, mTotal:%d\n", mTotal);
             strcpy(subInfoStr, recvBuf+8);
             //ALOGE("child recv, subTypeStr:%s\n", subInfoStr);
-            //safeCopy(mLoopBuf, recvBuf+8, retLen-8);
+            safeCopy(mLoopBuf, recvBuf+8, retLen-8);
             setInSubTypeLanBySkt(subInfoStr);
         }
         else if ((retLen >= 8) && recvBuf[0] == 0x53
             && recvBuf[1] == 0x50
             && recvBuf[2] == 0x54
             && recvBuf[3] == 0x53
-            /*&& mStartPts < 0*/) {//SPTS
+            && mStartPts < 0) {//SPTS
             mStartPts = (recvBuf[4] << 24)
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
             ALOGV("child recv, mStartPts:%" PRId64 "\n", mStartPts);
-            //safeCopy(mLoopBuf, recvBuf+8, retLen-8);
+            safeCopy(mLoopBuf, recvBuf+8, retLen-8);
         }
         else if ((retLen >= 8) && recvBuf[0] == 0x53
             && recvBuf[1] == 0x54
             && recvBuf[2] == 0x59
             && recvBuf[3] == 0x50
-            /*&& mType < 0*/) {//STYP
+            && mType < 0) {//STYP
             mType = (recvBuf[4] << 24)
                     | (recvBuf[5] << 16)
                     | (recvBuf[6] << 8)
                     | recvBuf[7];
             //ALOGV("child recv, mType:%d\n", mType);
-            //safeCopy(mLoopBuf, recvBuf+8, retLen-8);
+            safeCopy(mLoopBuf, recvBuf+8, retLen-8);
         }
         else if ((retLen >= 8) && recvBuf[0] == 0x53
             && recvBuf[1] == 0x52
