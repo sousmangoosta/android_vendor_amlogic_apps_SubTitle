@@ -577,12 +577,14 @@ void inter_subtitle_parser()
 #else
 void *inter_subtitle_parser()
 {
-    int inner_sub_total = get_subtitle_num();
-    int inner_sub_type = get_subtitle_subtype();
+    int inner_sub_total;
+    int inner_sub_type ;
     //sub_thread = 1;
     while (sub_thread)
     {
-        //LOGI("[inter_subtitle_parser]get_subtitle_num():%d\n", get_subtitle_num());
+        inner_sub_type = get_subtitle_subtype();
+        inner_sub_total = get_subtitle_num();
+        //LOGI("[inter_subtitle_parser]inner_sub_total:%d, inner_sub_type:%d\n", inner_sub_total, inner_sub_type);
         if (inner_sub_total > 0)
             get_inter_spu();
         subThreadSleeping = 1;

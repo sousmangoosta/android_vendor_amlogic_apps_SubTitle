@@ -306,7 +306,19 @@ void child_connect(int sockfd) {
             //ALOGV("child recv, mTimeUs:%d\n", mTimeUs);
             safeCopy(mLoopBuf, recvBuf+8, retLen-8);
         }
-        else /*if (recvBuf[0] != 'S' && recvBuf[1] != 'T' && recvBuf[2] != 'Y' && recvBuf[3] != 'P')*/ {
+        else if (recvBuf[0] == 0x51 && recvBuf[1] == 0x53) {//subInfo_head
+            mType = (recvBuf[2] << 24)
+                          | (recvBuf[3] << 16)
+                          | (recvBuf[4] << 8)
+                          | recvBuf[5];
+            mTotal = (recvBuf[6] << 24)
+                          | (recvBuf[7] << 16)
+                          | (recvBuf[8] << 8)
+                          | recvBuf[9];
+            ALOGV("child recv, mType:%d, mTotal:%d, retLen:%d\n", mType, mTotal, retLen);
+            safeCopy(mLoopBuf, recvBuf + 10, retLen-10);
+        } else {
+            //ALOGV("child recv, ##retLen:%d\n", retLen);
             safeCopy(mLoopBuf, recvBuf, retLen);
         }
 
