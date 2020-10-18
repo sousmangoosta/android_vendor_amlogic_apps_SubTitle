@@ -51,7 +51,7 @@ LOCAL_C_INCLUDES := external/libzvbi/src \
 #  frameworks/native/include
 
 
-LOCAL_SHARED_LIBRARIES += libjnigraphics  liblog libcutils   libicuuc libicui18n
+LOCAL_SHARED_LIBRARIES += libjnigraphics  liblog libcutils libandroidicu
 LOCAL_STATIC_LIBRARIES += \
   libam_mw \
   libzvbi \

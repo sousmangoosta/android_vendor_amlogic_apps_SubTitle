@@ -26,7 +26,7 @@ endif
 
 LOCAL_PRODUCT_MODULE := true
 LOCAL_PROGUARD_ENABLED := disabled
-LOCAL_SHARED_LIBRARIES += libutils  libcutils liblog libicuuc libicui18n
+LOCAL_SHARED_LIBRARIES += libutils libcutils liblog libandroidicu
 LOCAL_STATIC_LIBRARIES += \
   libzvbi
 LOCAL_CFLAGS += -DANDROID_PLATFORM_SDK_VERSION=$(PLATFORM_SDK_VERSION)
